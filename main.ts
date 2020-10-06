@@ -257,8 +257,13 @@ function set_hero_animations () {
     )
     character.setCharacterAnimationsEnabled(sprite_hero, true)
 }
+function tilemap_home_delete () {
+    sprite_artifact_chest.setFlag(SpriteFlag.Invisible, true)
+    sprite_artifact_chest.setFlag(SpriteFlag.Ghost, true)
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSprite) {
     if (!(sprites.readDataBoolean(otherSprite, "opened"))) {
+        pause(100)
         sprite_artifact_chest.setImage(img`
             . b b b b b b b b b b b b b b . 
             b e 4 4 4 4 4 4 4 4 4 4 4 4 4 b 
@@ -288,6 +293,12 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSp
         }
     }
 })
+function tilemap_home_setup () {
+    tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 7))
+    tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
+    sprite_artifact_chest.setFlag(SpriteFlag.Invisible, false)
+    sprite_artifact_chest.setFlag(SpriteFlag.Ghost, false)
+}
 let user_artifacts: string[][] = []
 let sprite_artifact_chest: Sprite = null
 let sprite_hero: Sprite = null
@@ -339,17 +350,33 @@ info.setScore(0)
 info.setLife(20)
 scene.setBackgroundColor(15)
 tiles.setTilemap(tilemap`level`)
+let tilemap_home = tiles.getLoadedMap()
 scene.cameraFollowSprite(sprite_hero)
-tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 7))
-tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
+tilemap_home_setup()
 pause(100)
 game.showLongText("Welcome to TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
 game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
 game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or maybe even the occasional power up!", DialogLayout.Bottom)
 game.showLongText("You will definitely want to avoid the snakes. They will be patrolling the dungeon, and if they get hold of you, you die!", DialogLayout.Bottom)
 game.showLongText("The longer you stay in the dungeon, the more clank you will generate. This will awaken bats and ghost, which won't be good!", DialogLayout.Bottom)
-game.showLongText("When you are ready to enter, flick the lever. This will open the door to the dungeon.", DialogLayout.Bottom)
+game.showLongText("When you are ready to enter, head through the doors.", DialogLayout.Bottom)
 game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+game.onUpdate(function () {
+    if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.doorOpenEast)) {
+        if (game.ask("Are you sure you want to", "enter the dungoen?")) {
+            timer.background(function () {
+                sprite_hero.setFlag(SpriteFlag.Invisible, true)
+                sprite_hero.x += -16
+                pause(100)
+                color.startFade(color.originalPalette, color.Black, 1000)
+                color.pauseUntilFadeDone()
+                tilemap_home_delete()
+            })
+        } else {
+            sprite_hero.x += -16
+        }
+    }
+})
 game.onUpdate(function () {
     if (!(sprite_hero.overlapsWith(sprite_artifact_chest))) {
         if (sprites.readDataBoolean(sprite_artifact_chest, "opened")) {

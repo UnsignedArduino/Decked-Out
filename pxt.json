@@ -4,7 +4,10 @@
     "dependencies": {
         "device": "*",
         "character-animations": "github:riknoll/character-animations#v0.1.0",
-        "arcade-sprite-data": "github:microsoft/arcade-sprite-data#v0.1.0"
+        "arcade-sprite-data": "github:microsoft/arcade-sprite-data#v0.1.0",
+        "Color Fading": "github:jwunderl/pxt-color#v0.1.3",
+        "tilemaps": "github:microsoft/pxt-tilemaps#v1.9.2",
+        "Timers": "github:microsoft/arcade-timers#v1.1.0"
     },
     "files": [
         "main.blocks",
