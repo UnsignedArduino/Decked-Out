@@ -1,6 +1,18 @@
 namespace SpriteKind {
-    export const Loot_Box = SpriteKind.create()
     export const Chest = SpriteKind.create()
+}
+scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function (sprite, location) {
+    if (in_game) {
+        timer.throttle("display_cant_go_back_warning", 500, function () {
+            pause_enemies()
+            sprite_hero.y += 8
+            game.showLongText("It's pointless going back now!", DialogLayout.Bottom)
+            unpause_enemies()
+        })
+    }
+})
+function unpause_enemies () {
+    paused = false
 }
 function set_hero_animations () {
     character.loopFrames(
@@ -257,6 +269,33 @@ function set_hero_animations () {
     )
     character.setCharacterAnimationsEnabled(sprite_hero, true)
 }
+function set_loot_tables () {
+    // Format:
+    // 0: Name
+    // 1: Description
+    // 2: Rarity
+    // 3: Set (for tracking)
+    // 4: Rarity (for tracking)
+    // 
+    // Example:
+    // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
+    loot_table = [
+    ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"],
+    ["Blue Toy Car", "A blue toy car, fun to play with!", "Uncommon", "car", "uncommon"],
+    ["Pink Toy Car", "A pink toy car, fun to play with!", "Rare", "car", "rare"],
+    ["Fake Apple", "A fake apple for fake meals.", "Common", "fruit", "common"],
+    ["Fake Cherry", "A fake cherry for fake meals.", "Uncommon", "fruit", "uncommon"],
+    ["Fake Strawberry", "A fake strawberry for fake meals.", "Rare", "fruit", "rare"],
+    ["Donut Model", "Fake donuts for advertising.", "Common", "desert", "common"],
+    ["Cake Model", "Fake cakes for advertising.", "Uncommon", "desert", "uncommon"],
+    ["Vanilla Ice Cream Model", "Circus Baby's Ice Cream in Sister Location.", "Rare", "desert", "rare"],
+    ["Plastic Pizza", "A plastic pizza from a cooking set.", "Common", "food", "common"],
+    ["Plastic Burger", "A plastic burger from a cooking set.", "Uncommon", "food", "uncommon"],
+    ["Plastic Taco", "A plastic taco from a cooking set.", "Rare", "food", "rare"]
+    ]
+    loot_sets = ["car", "fruit", "desert", "food"]
+    coins_chance = 50
+}
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (info.score() > 0) {
         controller.moveSprite(sprite_hero, 75, 75)
@@ -288,18 +327,148 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSp
         game.showLongText("This is where your artifacts are kept after you survive a run! You can have up to 12 items!", DialogLayout.Bottom)
         if (user_artifacts.length > 0) {
             for (let index = 0; index <= user_artifacts.length - 1; index++) {
-                game.showLongText("Artifact #" + index + ":\\n" + user_artifacts[index][0] + "\\n" + user_artifacts[index][1] + "\\nRarity: " + user_artifacts[index][2], DialogLayout.Center)
+                game.showLongText("Artifact #" + (index + 1) + ":\\n" + user_artifacts[index][0] + "\\n" + user_artifacts[index][1] + "\\nRarity: " + user_artifacts[index][2], DialogLayout.Center)
             }
         } else {
             game.showLongText("Aww...you don't have any! Go and get some!", DialogLayout.Bottom)
         }
     }
 })
+info.onCountdownEnd(function () {
+	
+})
+function get_random_coins (max: number) {
+    pause_enemies()
+    local_coins_got = count_random_coins(max)
+    user_coins += local_coins_got
+    if (local_coins_got == 0) {
+        game.showLongText("Dang, you didn't get any coins! :(", DialogLayout.Bottom)
+    } else {
+        game.showLongText("Oh look, you found some coins!", DialogLayout.Bottom)
+        game.showLongText("You found:\\n" + local_coins_got + " coin(s)!", DialogLayout.Center)
+    }
+    unpause_enemies()
+}
+function count_random_coins (max: number) {
+    local_coins = 0
+    for (let index2 = 0; index2 <= max; index2++) {
+        if (Math.percentChance(coins_chance - index2)) {
+            local_coins += 1
+        } else {
+            return local_coins
+        }
+    }
+    return local_coins
+}
 controller.A.onEvent(ControllerButtonEvent.Released, function () {
     controller.moveSprite(sprite_hero, 50, 50)
     running = false
 })
+function pause_enemies () {
+    paused = true
+    for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+        sprites.setDataNumber(sprite, "paused_x", sprite.x)
+        sprites.setDataNumber(sprite, "paused_y", sprite.y)
+    }
+}
+scene.onOverlapTile(SpriteKind.Player, myTiles.tile1, function (sprite, location) {
+    tiles.setTileAt(location, myTiles.tile2)
+    chests_left = tiles.getTilesByType(myTiles.tile1).length
+    chests_opened = tiles.getTilesByType(myTiles.tile2).length
+    if (!(got_loot)) {
+        if (chests_left == 0 || Math.percentChance(chests_opened * 2.5) || true) {
+            pause_enemies()
+            got_loot = true
+            artifacts_obtained = [get_random_loot(), get_random_loot(), get_random_loot()]
+            tiles.setTileAt(tiles.getTileLocation(5, 2), sprites.dungeon.doorOpenNorth)
+            tiles.setTileAt(tiles.getTileLocation(6, 2), sprites.dungeon.doorOpenNorth)
+            game.showLongText("You found your loot box!", DialogLayout.Bottom)
+            game.showLongText("You got:", DialogLayout.Bottom)
+            for (let index3 = 0; index3 <= artifacts_obtained.length - 1; index3++) {
+                game.showLongText("Artifact #" + (index3 + 1) + ":\\n" + artifacts_obtained[index3][0] + "\\n" + artifacts_obtained[index3][1] + "\\nRarity: " + artifacts_obtained[index3][2], DialogLayout.Center)
+            }
+            get_random_coins(10)
+            unpause_enemies()
+        } else {
+            get_random_coins(10)
+        }
+    } else {
+        get_random_coins(10)
+    }
+})
+function get_random_loot () {
+    local_chance = randint(0, 99)
+    if (local_chance >= 90) {
+        local_rarity = "rare"
+    } else if (local_chance >= 50) {
+        local_rarity = "uncommon"
+    } else {
+        local_rarity = "common"
+    }
+    local_set = loot_sets[randint(0, loot_sets.length - 1)]
+    for (let artifact of loot_table) {
+        if (artifact[3] == local_set && artifact[4] == local_rarity) {
+            return artifact
+        }
+    }
+    return ["Bug", "You are not supposed to get this!", "Not supposed to happen", "placeholder_return_values", "impossible"]
+}
+scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
+    if (in_game && !(end_game)) {
+        pause_enemies()
+        controller.moveSprite(sprite_hero, 0, 0)
+        end_game = true
+        timer.after(250, function () {
+            sprite_hero.setFlag(SpriteFlag.Invisible, true)
+            in_game = false
+        })
+        timer.background(function () {
+            color.startFade(color.originalPalette, color.Black, 1000)
+            color.pauseUntilFadeDone()
+            tiles.setTilemap(tiles.createTilemap(hex`1000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000`, img`
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                `, [myTiles.transparency16], TileScale.Sixteen))
+            info.setScore(user_coins)
+            pause(2000)
+            color.startFade(color.Black, color.originalPalette, 1000)
+            color.pauseUntilFadeDone()
+            game.over(true)
+        })
+    }
+})
+let start_time = 0
+let local_set = ""
+let local_rarity = ""
+let local_chance = 0
+let local_coins = 0
+let user_coins = 0
+let local_coins_got = 0
+let coins_chance = 0
+let loot_sets: string[] = []
+let loot_table: string[][] = []
+let artifacts_obtained: string[][] = []
+let chests_opened = 0
+let chests_left = 0
+let end_game = false
+let in_game = false
+let paused = false
 let running = false
+let got_loot = false
 let user_artifacts: string[][] = []
 let sprite_artifact_chest: Sprite = null
 let sprite_hero: Sprite = null
@@ -346,83 +515,72 @@ sprite_artifact_chest = sprites.create(img`
     `, SpriteKind.Chest)
 sprites.setDataBoolean(sprite_artifact_chest, "opened", false)
 sprite_artifact_chest.z = 5
-user_artifacts = [["Red Toy Car", "A red toy car, fun to play with!", "Common", "car_set", "common"]]
+// Format:
+// 0: Name
+// 1: Description
+// 2: Rarity
+// 3: Set (for tracking)
+// 4: Rarity (for tracking)
+// 
+// Example:
+// ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
+user_artifacts = [["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]]
 user_artifacts.pop()
 info.setScore(20)
 info.setLife(20)
-let in_game = false
-let got_loot = false
+got_loot = false
 running = false
+paused = false
+in_game = false
+end_game = false
+let clank = 5
+let clank_multiplier = 1
+chests_left = 0
+chests_opened = 0
+artifacts_obtained = []
+set_loot_tables()
 scene.setBackgroundColor(15)
 tiles.setTilemap(tilemap`level`)
 scene.cameraFollowSprite(sprite_hero)
 tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 7))
 tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
 pause(100)
-game.showLongText("Welcome to TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
-game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
-game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or maybe even the occasional power up!", DialogLayout.Bottom)
-game.showLongText("You will definitely want to avoid the snakes. They will be patrolling the dungeon, and if they get hold of you, you die!", DialogLayout.Bottom)
-game.showLongText("The longer you stay in the dungeon, the more clank you will generate. This will awaken bats and ghost, which won't be good!", DialogLayout.Bottom)
-game.showLongText("When you are ready to enter, head through the doors.", DialogLayout.Bottom)
-game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+if (false) {
+    game.showLongText("Welcome to TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
+    game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
+    game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or maybe even the occasional power up!", DialogLayout.Bottom)
+    game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager)" + "They will be patrolling the dungeon, " + "and if they get hold of you, you'll die!" + "", DialogLayout.Bottom)
+    game.showLongText("The longer you stay in the dungeon, the more clank you will generate. This will awaken bats and ghost, which won't be good!", DialogLayout.Bottom)
+    game.showLongText("When you are ready to enter, head through the doors on the right.", DialogLayout.Bottom)
+    game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+}
 game.onUpdate(function () {
     if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.doorOpenEast) && !(in_game)) {
-        if (game.ask("Are you sure you want to", "enter the dungoen?")) {
-            timer.background(function () {
-                controller.moveSprite(sprite_hero, 0, 0)
-                sprite_hero.setFlag(SpriteFlag.Invisible, true)
+        timer.throttle("enter_dungeon", 500, function () {
+            if (game.ask("Are you sure you want to", "enter the dungoen?")) {
+                timer.background(function () {
+                    controller.moveSprite(sprite_hero, 0, 0)
+                    sprite_hero.setFlag(SpriteFlag.Invisible, true)
+                    sprite_hero.x += -16
+                    pause(100)
+                    color.startFade(color.originalPalette, color.Black, 1000)
+                    color.pauseUntilFadeDone()
+                    pause(500)
+                    sprite_artifact_chest.destroy()
+                    sprite_hero.setFlag(SpriteFlag.Invisible, false)
+                    tiles.setTilemap(tilemap`level_0`)
+                    tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
+                    in_game = true
+                    start_time = game.runtime()
+                    pause(500)
+                    controller.moveSprite(sprite_hero, 50, 50)
+                    color.startFade(color.Black, color.originalPalette, 1000)
+                    color.pauseUntilFadeDone()
+                })
+            } else {
                 sprite_hero.x += -16
-                pause(100)
-                color.startFade(color.originalPalette, color.Black, 1000)
-                color.pauseUntilFadeDone()
-                pause(500)
-                sprite_artifact_chest.destroy()
-                sprite_hero.setFlag(SpriteFlag.Invisible, false)
-                tiles.setTilemap(tiles.createTilemap(hex`3000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0b151919150b0d00000000000000000000000000000a0b150b0c0b150b0d0000002b3033303d3e303330310000000018020303030304170000000000000000000000000000180203030303030417000000363903033c3f0303042600000000130901010101051b0b150c0c150b0b0b0c150c0b150c2209011e071d01051b0b0c27290901010101010105350000000014090101010101010101010101010101010101010101010101054409010101010101010140410101404105260000000013090101011e051a11161111161c09051a16101116101c090105440901051a11112f32094243010142430525000000001808071d1e07061700000000001309050e00000000001809011f0320010517000000360940410101404105260000000012161c09051a160f00000000001409050e0000000000130807070107073921000000230942430101424305260000000000001309050e00000000000000130905210000000000121110161c011a160f0000002409404101014041052500000000000014090521000000000000001409052100000000000000000014010e0000000000230942430101424305350000000000001409050e00000a0b0b150b2209051b0b150c46460c0c0d001301210000000000240807071d1e07070625000000000000130905210000133903030303201f0303030303030304210014012100000000002c2d3432090528342d2e00000000000018090517000018090101010101010101010101010105170014010e0000000000000000240905250000000000000000001409051b0b0c22090101011e07070707071d010101051b0c22011b0c0b3330302730272909052500000000000000000014091f0303030320010101053837383738090101011f030303010303030303030303030320052600000000000000000013091e070707071d010101053738373837090101011e0707070707070707071d1e0707070706250000000000000000001309051a11111c090101011f030303030320010101051a1110111011113432090528342f2d2d2e0000000000000000001809051700001809010101010101010101010101010517000000000000002409052500000000000000000000000000001309050e0000140807070707070707070107070707062100000000002b332909052a33303030303031000000000000002409052500001211484810111116101c011a111611100f0000000000243903201f030303030303042500000000000000240905260000000000000000000000140121000000000000000000002309011e07070707071d01053500000000002b332909052a333d3e3d3e3d3e3d3e333029012a27333100000000000000240901054444444444090105260000000000363903201f03033c3f3c3f3c3f3c3f0303030103030435000000000000003609010544453a4544090105250000000000230901010101010101010101010101010101010101052a273027333027272909010544453b45440901054900000000004709010101014041010140410101404101010101011f03030303030303030320010544454545440901052600000000004709010101014243010142430101424301010101011e0707070707070707071d0105444444444409010525000000000023090101010101010101010101010101010101010105282d2d2f342f2d2d3209011f03030303032001053500000000003608070707070707070707070707070707070707070635000000000000003608070707070707070707062600000000002c342f2d2f2f342d2f2f2f2d2f2f2f342f2f2d2f2d342e000000000000002c2f2d2d2f2f2d2f2f2d2f2f2e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000`, img`
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    ................................................
-                    `, [myTiles.transparency16,sprites.dungeon.darkGroundCenter,sprites.dungeon.darkGroundNorthWest0,sprites.dungeon.darkGroundNorth,sprites.dungeon.darkGroundNorthEast0,sprites.dungeon.darkGroundEast,sprites.dungeon.darkGroundSouthEast0,sprites.dungeon.darkGroundSouth,sprites.dungeon.darkGroundSouthWest0,sprites.dungeon.darkGroundWest,sprites.dungeon.greenOuterNorthWest,sprites.dungeon.greenOuterNorth0,sprites.dungeon.greenOuterNorth1,sprites.dungeon.greenOuterNorthEast,sprites.dungeon.greenOuterEast0,sprites.dungeon.greenOuterSouthWest,sprites.dungeon.greenOuterSouth1,sprites.dungeon.greenOuterSouth0,sprites.dungeon.greenOuterSouthEast,sprites.dungeon.greenOuterWest0,sprites.dungeon.greenOuterWest1,sprites.dungeon.greenOuterNorth2,sprites.dungeon.greenOuterSouth2,sprites.dungeon.greenOuterEast2,sprites.dungeon.greenOuterWest2,sprites.dungeon.doorLockedNorth,sprites.dungeon.greenInnerNorthWest,sprites.dungeon.greenInnerSouthWest,sprites.dungeon.greenInnerNorthEast,sprites.dungeon.darkGroundNorthEast1,sprites.dungeon.darkGroundNorthWest1,sprites.dungeon.darkGroundSouthWest1,sprites.dungeon.darkGroundSouthEast1,sprites.dungeon.greenOuterEast1,sprites.dungeon.greenInnerSouthEast,sprites.dungeon.purpleOuterWest0,sprites.dungeon.purpleOuterWest1,sprites.dungeon.purpleOuterEast0,sprites.dungeon.purpleOuterEast1,sprites.dungeon.purpleOuterNorth1,sprites.dungeon.purpleInnerNorthWest,sprites.dungeon.purpleInnerSouthEast,sprites.dungeon.purpleInnerSouthWest,sprites.dungeon.purpleOuterNorthWest,sprites.dungeon.purpleOuterSouthEast,sprites.dungeon.purpleOuterSouth0,sprites.dungeon.purpleOuterSouthWest,sprites.dungeon.purpleOuterSouth1,sprites.dungeon.purpleOuterNorth0,sprites.dungeon.purpleOuterNorthEast,sprites.dungeon.purpleInnerNorthEast,sprites.dungeon.purpleOuterNorth2,sprites.dungeon.purpleOuterSouth2,sprites.dungeon.purpleOuterEast2,sprites.dungeon.purpleOuterWest2,sprites.dungeon.hazardLava0,sprites.dungeon.hazardLava1,myTiles.tile1,myTiles.tile3,myTiles.tile4,myTiles.tile6,myTiles.tile7,myTiles.tile8,myTiles.tile9,myTiles.tile10,myTiles.tile11,myTiles.tile12,myTiles.tile13,sprites.castle.tileDarkGrass2,myTiles.tile14,sprites.dungeon.doorClosedNorth,sprites.dungeon.doorClosedWest,sprites.dungeon.doorClosedSouth,sprites.dungeon.doorClosedEast], TileScale.Sixteen))
-                tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
-                in_game = true
-                pause(500)
-                controller.moveSprite(sprite_hero, 50, 50)
-                color.startFade(color.Black, color.originalPalette, 1000)
-                color.pauseUntilFadeDone()
-            })
-        } else {
-            sprite_hero.x += -16
-        }
+            }
+        })
     }
 })
 game.onUpdate(function () {
@@ -471,16 +629,150 @@ game.onUpdate(function () {
             `)
     }
 })
+game.onUpdate(function () {
+    if (in_game || end_game) {
+        info.startCountdown((game.runtime() - start_time) / 1000)
+    }
+})
+game.onUpdate(function () {
+    if (paused) {
+        for (let sprite2 of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite2.x = sprites.readDataNumber(sprite2, "paused_x")
+            sprite2.y = sprites.readDataNumber(sprite2, "paused_y")
+        }
+    }
+})
+game.onUpdateInterval(5000, function () {
+    sprite_hero.say(clank)
+    if (in_game && !(paused)) {
+        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
+            clank_multiplier = 1
+        } else {
+            if (running) {
+                clank_multiplier = 2
+            } else {
+                clank_multiplier = 4
+            }
+        }
+        if (Math.percentChance(clank * clank_multiplier)) {
+            clank += 1
+        }
+    }
+})
 game.onUpdateInterval(2000, function () {
     if (!(running) && info.score() < 20) {
         info.changeScoreBy(1)
-        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
-            timer.after(1000, function () {
-                if (info.score() < 20) {
-                    info.changeScoreBy(1)
-                }
-            })
+    }
+    if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
+        timer.after(1000, function () {
+            if (info.score() < 20) {
+                info.changeScoreBy(1)
+            }
+        })
+    }
+})
+// From: https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
+// 
+// #define NOTE_B0  31
+// #define NOTE_C1  33
+// #define NOTE_CS1 35
+// #define NOTE_D1  37
+// #define NOTE_DS1 39
+// #define NOTE_E1  41
+// #define NOTE_F1  44
+// #define NOTE_FS1 46
+// #define NOTE_G1  49
+// #define NOTE_GS1 52
+// #define NOTE_A1  55
+// #define NOTE_AS1 58
+// #define NOTE_B1  62
+// #define NOTE_C2  65
+// #define NOTE_CS2 69
+// #define NOTE_D2  73
+// #define NOTE_DS2 78
+// #define NOTE_E2  82
+// #define NOTE_F2  87
+// #define NOTE_FS2 93
+// #define NOTE_G2  98
+// #define NOTE_GS2 104
+// #define NOTE_A2  110
+// #define NOTE_AS2 117
+// #define NOTE_B2  123
+// #define NOTE_C3  131
+// #define NOTE_CS3 139
+// #define NOTE_D3  147
+// #define NOTE_DS3 156
+// #define NOTE_E3  165
+// #define NOTE_F3  175
+// #define NOTE_FS3 185
+// #define NOTE_G3  196
+// #define NOTE_GS3 208
+// #define NOTE_A3  220
+// #define NOTE_AS3 233
+// #define NOTE_B3  247
+// #define NOTE_C4  262
+// #define NOTE_CS4 277
+// #define NOTE_D4  294
+// #define NOTE_DS4 311
+// #define NOTE_E4  330
+// #define NOTE_F4  349
+// #define NOTE_FS4 370
+// #define NOTE_G4  392
+// #define NOTE_GS4 415
+// #define NOTE_A4  440
+// #define NOTE_AS4 466
+// #define NOTE_B4  494
+// #define NOTE_C5  523
+// #define NOTE_CS5 554
+// #define NOTE_D5  587
+// #define NOTE_DS5 622
+// #define NOTE_E5  659
+// #define NOTE_F5  698
+// #define NOTE_FS5 740
+// #define NOTE_G5  784
+// #define NOTE_GS5 831
+// #define NOTE_A5  880
+// #define NOTE_AS5 932
+// #define NOTE_B5  988
+// #define NOTE_C6  1047
+// #define NOTE_CS6 1109
+// #define NOTE_D6  1175
+// #define NOTE_DS6 1245
+// #define NOTE_E6  1319
+// #define NOTE_F6  1397
+// #define NOTE_FS6 1480
+// #define NOTE_G6  1568
+// #define NOTE_GS6 1661
+// #define NOTE_A6  1760
+// #define NOTE_AS6 1865
+// #define NOTE_B6  1976
+// #define NOTE_C7  2093
+// #define NOTE_CS7 2217
+// #define NOTE_D7  2349
+// #define NOTE_DS7 2489
+// #define NOTE_E7  2637
+// #define NOTE_F7  2794
+// #define NOTE_FS7 2960
+// #define NOTE_G7  3136
+// #define NOTE_GS7 3322
+// #define NOTE_A7  3520
+// #define NOTE_AS7 3729
+// #define NOTE_B7  3951
+// #define NOTE_C8  4186
+// #define NOTE_CS8 4435
+// #define NOTE_D8  4699
+// #define NOTE_DS8 4978
+forever(function () {
+    if (in_game) {
+        pause(Math.max(10000 - clank * 100, 1000))
+        for (let index = 0; index < 2; index++) {
+            music.playTone(104, music.beat(BeatFraction.Sixteenth))
+            music.rest(music.beat(BeatFraction.Half))
         }
+    }
+    if (false) {
+        music.playTone(104, music.beat(BeatFraction.Sixteenth))
+        music.rest(music.beat(BeatFraction.Half))
     }
 })
 game.onUpdateInterval(500, function () {
