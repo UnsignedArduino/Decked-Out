@@ -1,5 +1,6 @@
 namespace SpriteKind {
     export const Chest = SpriteKind.create()
+    export const Seeing = SpriteKind.create()
 }
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function (sprite, location) {
     if (in_game) {
@@ -334,6 +335,155 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSp
         }
     }
 })
+function summon_snake () {
+    sprite_snake = sprites.create(img`
+        . . . . c c c c c c . . . . . . 
+        . . . c 6 7 7 7 7 6 c . . . . . 
+        . . c 7 7 7 7 7 7 7 7 c . . . . 
+        . c 6 7 7 7 7 7 7 7 7 6 c . . . 
+        . c 7 c 6 6 6 6 c 7 7 7 c . . . 
+        . f 7 6 f 6 6 f 6 7 7 7 f . . . 
+        . f 7 7 7 7 7 7 7 7 7 7 f . . . 
+        . . f 7 7 7 7 6 c 7 7 6 f c . . 
+        . . . f c c c c 7 7 6 f 7 7 c . 
+        . . c 7 2 7 7 7 6 c f 7 7 7 7 c 
+        . c 7 7 2 7 7 c f c 6 7 7 6 c c 
+        c 1 1 1 1 7 6 f c c 6 6 6 c . . 
+        f 1 1 1 1 1 6 6 c 6 6 6 6 f . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 c f . . 
+        . f 6 1 1 1 1 1 1 6 6 6 f . . . 
+        . . c c c c c c c c c f . . . . 
+        `, SpriteKind.Enemy)
+    tiles.placeOnRandomTile(sprite_snake, sprites.dungeon.darkGroundCenter)
+    sprites.setDataBoolean(sprite_snake, "see_player", false)
+    sprites.setDataNumber(sprite_snake, "see_cooldown", 10)
+    character.loopFrames(
+    sprite_snake,
+    [img`
+        . . . . c c c c c c . . . . . . 
+        . . . c 6 7 7 7 7 6 c . . . . . 
+        . . c 7 7 7 7 7 7 7 7 c . . . . 
+        . c 6 7 7 7 7 7 7 7 7 6 c . . . 
+        . c 7 c 6 6 6 6 c 7 7 7 c . . . 
+        . f 7 6 f 6 6 f 6 7 7 7 f . . . 
+        . f 7 7 7 7 7 7 7 7 7 7 f . . . 
+        . . f 7 7 7 7 6 c 7 7 6 f c . . 
+        . . . f c c c c 7 7 6 f 7 7 c . 
+        . . c 7 2 7 7 7 6 c f 7 7 7 7 c 
+        . c 7 7 2 7 7 c f c 6 7 7 6 c c 
+        c 1 1 1 1 7 6 f c c 6 6 6 c . . 
+        f 1 1 1 1 1 6 6 c 6 6 6 6 f . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 c f . . 
+        . f 6 1 1 1 1 1 1 6 6 6 f . . . 
+        . . c c c c c c c c c f . . . . 
+        `,img`
+        . . . c c c c c c . . . . . . . 
+        . . c 6 7 7 7 7 6 c . . . . . . 
+        . c 7 7 7 7 7 7 7 7 c . . . . . 
+        c 6 7 7 7 7 7 7 7 7 6 c . . . . 
+        c 7 c 6 6 6 6 c 7 7 7 c . . . . 
+        f 7 6 f 6 6 f 6 7 7 7 f . . . . 
+        f 7 7 7 7 7 7 7 7 7 7 f . . . . 
+        . f 7 7 7 7 6 c 7 7 6 f . . . . 
+        . . f c c c c 7 7 6 f c c c . . 
+        . . c 6 2 7 7 7 f c c 7 7 7 c . 
+        . c 6 7 7 2 7 7 c f 6 7 7 7 7 c 
+        . c 1 1 1 1 7 6 6 c 6 6 6 c c c 
+        . c 1 1 1 1 1 6 6 6 6 6 6 c . . 
+        . c 6 1 1 1 1 1 6 6 6 6 6 c . . 
+        . . c 6 1 1 1 1 1 7 6 6 c c . . 
+        . . . c c c c c c c c c c . . . 
+        `],
+    500,
+    character.rule(Predicate.MovingLeft)
+    )
+    character.loopFrames(
+    sprite_snake,
+    [img`
+        . . . . . . c c c c c c . . . . 
+        . . . . . c 6 7 7 7 7 6 c . . . 
+        . . . . c 7 7 7 7 7 7 7 7 c . . 
+        . . . c 6 7 7 7 7 7 7 7 7 6 c . 
+        . . . c 7 7 7 c 6 6 6 6 c 7 c . 
+        . . . f 7 7 7 6 f 6 6 f 6 7 f . 
+        . . . f 7 7 7 7 7 7 7 7 7 7 f . 
+        . . c f 6 7 7 c 6 7 7 7 7 f . . 
+        . c 7 7 f 6 7 7 c c c c f . . . 
+        c 7 7 7 7 f c 6 7 7 7 2 7 c . . 
+        c c 6 7 7 6 c f c 7 7 2 7 7 c . 
+        . . c 6 6 6 c c f 6 7 1 1 1 1 c 
+        . . f 6 6 6 6 c 6 6 1 1 1 1 1 f 
+        . . f c 6 6 6 6 6 1 1 1 1 1 6 f 
+        . . . f 6 6 6 1 1 1 1 1 1 6 f . 
+        . . . . f c c c c c c c c c . . 
+        `,img`
+        . . . . . . . c c c c c c . . . 
+        . . . . . . c 6 7 7 7 7 6 c . . 
+        . . . . . c 7 7 7 7 7 7 7 7 c . 
+        . . . . c 6 7 7 7 7 7 7 7 7 6 c 
+        . . . . c 7 7 7 c 6 6 6 6 c 7 c 
+        . . . . f 7 7 7 6 f 6 6 f 6 7 f 
+        . . . . f 7 7 7 7 7 7 7 7 7 7 f 
+        . . . . f 6 7 7 c 6 7 7 7 7 f . 
+        . . c c c f 6 7 7 c c c c f . . 
+        . c 7 7 7 c c f 7 7 7 2 6 c . . 
+        c 7 7 7 7 6 f c 7 7 2 7 7 6 c . 
+        c c c 6 6 6 c 6 6 7 1 1 1 1 c . 
+        . . c 6 6 6 6 6 6 1 1 1 1 1 c . 
+        . . c 6 6 6 6 6 1 1 1 1 1 6 c . 
+        . . c c 6 6 7 1 1 1 1 1 6 c . . 
+        . . . c c c c c c c c c c . . . 
+        `],
+    500,
+    character.rule(Predicate.MovingRight)
+    )
+    character.runFrames(
+    sprite_snake,
+    [img`
+        . . . . c c c c c c . . . . . . 
+        . . . c 6 7 7 7 7 6 c . . . . . 
+        . . c 7 7 7 7 7 7 7 7 c . . . . 
+        . c 6 7 7 7 7 7 7 7 7 6 c . . . 
+        . c 7 c 6 6 6 6 c 7 7 7 c . . . 
+        . f 7 6 f 6 6 f 6 7 7 7 f . . . 
+        . f 7 7 7 7 7 7 7 7 7 7 f . . . 
+        . . f 7 7 7 7 6 c 7 7 6 f c . . 
+        . . . f c c c c 7 7 6 f 7 7 c . 
+        . . c 7 2 7 7 7 6 c f 7 7 7 7 c 
+        . c 7 7 2 7 7 c f c 6 7 7 6 c c 
+        c 1 1 1 1 7 6 f c c 6 6 6 c . . 
+        f 1 1 1 1 1 6 6 c 6 6 6 6 f . . 
+        f 6 1 1 1 1 1 6 6 6 6 6 c f . . 
+        . f 6 1 1 1 1 1 1 6 6 6 f . . . 
+        . . c c c c c c c c c f . . . . 
+        `],
+    500,
+    character.rule(Predicate.FacingLeft, Predicate.NotMoving)
+    )
+    character.runFrames(
+    sprite_snake,
+    [img`
+        . . . . . . c c c c c c . . . . 
+        . . . . . c 6 7 7 7 7 6 c . . . 
+        . . . . c 7 7 7 7 7 7 7 7 c . . 
+        . . . c 6 7 7 7 7 7 7 7 7 6 c . 
+        . . . c 7 7 7 c 6 6 6 6 c 7 c . 
+        . . . f 7 7 7 6 f 6 6 f 6 7 f . 
+        . . . f 7 7 7 7 7 7 7 7 7 7 f . 
+        . . c f 6 7 7 c 6 7 7 7 7 f . . 
+        . c 7 7 f 6 7 7 c c c c f . . . 
+        c 7 7 7 7 f c 6 7 7 7 2 7 c . . 
+        c c 6 7 7 6 c f c 7 7 2 7 7 c . 
+        . . c 6 6 6 c c f 6 7 1 1 1 1 c 
+        . . f 6 6 6 6 c 6 6 1 1 1 1 1 f 
+        . . f c 6 6 6 6 6 1 1 1 1 1 6 f 
+        . . . f 6 6 6 1 1 1 1 1 1 6 f . 
+        . . . . f c c c c c c c c c . . 
+        `],
+    500,
+    character.rule(Predicate.FacingRight, Predicate.NotMoving)
+    )
+}
 info.onCountdownEnd(function () {
 	
 })
@@ -351,8 +501,8 @@ function get_random_coins (max: number) {
 }
 function count_random_coins (max: number) {
     local_coins = 0
-    for (let index2 = 0; index2 <= max; index2++) {
-        if (Math.percentChance(coins_chance - index2)) {
+    for (let index = 0; index <= max; index++) {
+        if (Math.percentChance(coins_chance - index)) {
             local_coins += 1
         } else {
             return local_coins
@@ -363,6 +513,28 @@ function count_random_coins (max: number) {
 controller.A.onEvent(ControllerButtonEvent.Released, function () {
     controller.moveSprite(sprite_hero, 50, 50)
     running = false
+})
+sprites.onDestroyed(SpriteKind.Seeing, function (sprite) {
+    if (sprite_hero.overlapsWith(sprite)) {
+        sprites.setDataBoolean(sprite, "see_player", true)
+        sprites.setDataNumber(sprites.readDataSprite(sprite, "saw_from"), "see_cooldown", 10)
+        sprites.readDataSprite(sprite, "saw_from").follow(sprite_hero, 50)
+    } else {
+        if (sprites.readDataNumber(sprites.readDataSprite(sprite, "saw_from"), "see_cooldown") > 0) {
+            sprites.changeDataNumberBy(sprites.readDataSprite(sprite, "saw_from"), "see_cooldown", -1)
+        } else {
+            sprites.setDataBoolean(sprite, "see_player", false)
+            sprites.readDataSprite(sprite, "saw_from").follow(sprite_hero, 0)
+        }
+    }
+})
+info.onLifeZero(function () {
+    info.setScore(user_coins)
+    game.over(false)
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
+    scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
+    otherSprite.destroy()
 })
 function pause_enemies () {
     paused = true
@@ -384,8 +556,8 @@ scene.onOverlapTile(SpriteKind.Player, myTiles.tile1, function (sprite, location
             tiles.setTileAt(tiles.getTileLocation(6, 2), sprites.dungeon.doorOpenNorth)
             game.showLongText("You found your loot box!", DialogLayout.Bottom)
             game.showLongText("You got:", DialogLayout.Bottom)
-            for (let index3 = 0; index3 <= artifacts_obtained.length - 1; index3++) {
-                game.showLongText("Artifact #" + (index3 + 1) + ":\\n" + artifacts_obtained[index3][0] + "\\n" + artifacts_obtained[index3][1] + "\\nRarity: " + artifacts_obtained[index3][2], DialogLayout.Center)
+            for (let index = 0; index <= artifacts_obtained.length - 1; index++) {
+                game.showLongText("Artifact #" + (index + 1) + ":\\n" + artifacts_obtained[index][0] + "\\n" + artifacts_obtained[index][1] + "\\nRarity: " + artifacts_obtained[index][2], DialogLayout.Center)
             }
             get_random_coins(10)
             unpause_enemies()
@@ -444,6 +616,9 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
                 . . . . . . . . . . . . . . . . 
                 `, [myTiles.transparency16], TileScale.Sixteen))
             info.setScore(user_coins)
+            for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+                sprite.destroy()
+            }
             pause(2000)
             color.startFade(color.Black, color.originalPalette, 1000)
             color.pauseUntilFadeDone()
@@ -451,6 +626,52 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
         })
     }
 })
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
+    if (true) {
+        info.changeLifeBy(-1)
+    }
+    if (character.matchesRule(sprite, character.rule(Predicate.FacingLeft))) {
+        otherSprite.setImage(img`
+            . . . . . c c c c c c c . . . . 
+            . . . . c 6 7 7 7 7 7 6 c . . . 
+            . . . c 7 c 6 6 6 6 c 7 6 c . . 
+            . . c 6 7 6 f 6 6 f 6 7 7 c . . 
+            . . c 7 7 7 7 7 7 7 7 7 7 c . . 
+            . . f 7 8 1 f f 1 6 7 7 7 f . . 
+            . . f 6 f 1 f f 1 f 7 7 7 f . . 
+            . . . f f 2 2 2 2 f 7 7 6 f . . 
+            . . c c f 2 2 2 2 7 7 6 f c . . 
+            . c 7 7 7 7 7 7 7 7 c c 7 7 c . 
+            c 7 1 1 1 7 7 7 7 f c 6 7 7 7 c 
+            f 1 1 1 1 1 7 6 f c c 6 6 6 c c 
+            f 1 1 1 1 1 1 6 6 c 6 6 6 c . . 
+            f 6 1 1 1 1 1 6 6 6 6 6 6 c . . 
+            . f 6 1 1 1 1 1 6 6 6 6 c . . . 
+            . . f f c c c c c c c c . . . . 
+            `)
+    } else {
+        otherSprite.setImage(img`
+            . . . . c c c c c c c . . . . . 
+            . . . c 6 7 7 7 7 7 6 c . . . . 
+            . . c 6 7 c 6 6 6 6 c 7 c . . . 
+            . . c 7 7 6 f 6 6 f 6 7 6 c . . 
+            . . c 7 7 7 7 7 7 7 7 7 7 c . . 
+            . . f 7 7 7 6 1 f f 1 8 7 f . . 
+            . . f 7 7 7 f 1 f f 1 f 6 f . . 
+            . . f 6 7 7 f 2 2 2 2 f f . . . 
+            . . c f 6 7 7 2 2 2 2 f c c . . 
+            . c 7 7 c c 7 7 7 7 7 7 7 7 c . 
+            c 7 7 7 6 c f 7 7 7 7 1 1 1 7 c 
+            c c 6 6 6 c c f 6 7 1 1 1 1 1 f 
+            . . c 6 6 6 c 6 6 1 1 1 1 1 1 f 
+            . . c 6 6 6 6 6 6 1 1 1 1 1 6 f 
+            . . . c 6 6 6 6 1 1 1 1 1 6 f . 
+            . . . . c c c c c c c c f f . . 
+            `)
+    }
+})
+let end_location: tiles.Location = null
+let sprite_seeing: Sprite = null
 let start_time = 0
 let local_set = ""
 let local_rarity = ""
@@ -458,6 +679,7 @@ let local_chance = 0
 let local_coins = 0
 let user_coins = 0
 let local_coins_got = 0
+let sprite_snake: Sprite = null
 let coins_chance = 0
 let loot_sets: string[] = []
 let loot_table: string[][] = []
@@ -494,6 +716,7 @@ controller.moveSprite(sprite_hero, 50, 50)
 sprite_hero.setFlag(SpriteFlag.ShowPhysics, false)
 sprite_hero.setFlag(SpriteFlag.StayInScreen, true)
 sprite_hero.z = 10
+sprites.setDataBoolean(sprite_hero, "on_fire", false)
 set_hero_animations()
 sprite_artifact_chest = sprites.create(img`
     . . b b b b b b b b b b b b . . 
@@ -570,8 +793,11 @@ game.onUpdate(function () {
                     sprite_hero.setFlag(SpriteFlag.Invisible, false)
                     tiles.setTilemap(tilemap`level_0`)
                     tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
-                    in_game = true
                     start_time = game.runtime()
+                    in_game = true
+                    for (let index = 0; index < 3; index++) {
+                        summon_snake()
+                    }
                     pause(500)
                     controller.moveSprite(sprite_hero, 50, 50)
                     color.startFade(color.Black, color.originalPalette, 1000)
@@ -630,20 +856,37 @@ game.onUpdate(function () {
     }
 })
 game.onUpdate(function () {
+    if (in_game) {
+        if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.hazardLava0) || sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.hazardLava1)) {
+            if (!(sprites.readDataBoolean(sprite_hero, "on_fire"))) {
+                sprite_hero.startEffect(effects.fire)
+                sprites.setDataBoolean(sprite_hero, "on_fire", true)
+            }
+        } else if (sprites.readDataBoolean(sprite_hero, "on_fire")) {
+            timer.after(500, function () {
+                effects.clearParticles(sprite_hero)
+                sprites.setDataBoolean(sprite_hero, "on_fire", false)
+            })
+        }
+    }
+})
+game.onUpdate(function () {
     if (in_game || end_game) {
         info.startCountdown((game.runtime() - start_time) / 1000)
     }
 })
 game.onUpdate(function () {
     if (paused) {
-        for (let sprite2 of sprites.allOfKind(SpriteKind.Enemy)) {
-            sprite2.x = sprites.readDataNumber(sprite2, "paused_x")
-            sprite2.y = sprites.readDataNumber(sprite2, "paused_y")
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite.x = sprites.readDataNumber(sprite, "paused_x")
+            sprite.y = sprites.readDataNumber(sprite, "paused_y")
         }
     }
 })
 game.onUpdateInterval(5000, function () {
-    sprite_hero.say(clank)
+    if (true) {
+        sprite_hero.say(clank)
+    }
     if (in_game && !(paused)) {
         if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
             clank_multiplier = 1
@@ -659,6 +902,11 @@ game.onUpdateInterval(5000, function () {
         }
     }
 })
+game.onUpdateInterval(50, function () {
+    if (sprites.readDataBoolean(sprite_hero, "on_fire")) {
+        info.changeLifeBy(-1)
+    }
+})
 game.onUpdateInterval(2000, function () {
     if (!(running) && info.score() < 20) {
         info.changeScoreBy(1)
@@ -670,6 +918,21 @@ game.onUpdateInterval(2000, function () {
             }
         })
     }
+})
+forever(function () {
+    if (in_game) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite_seeing = sprites.createProjectileFromSprite(img`
+                3 
+                `, sprite, (sprite_hero.x - sprite.x) * 10, (sprite_hero.y - sprite.y) * 10)
+            sprite_seeing.setFlag(SpriteFlag.Invisible, false)
+            sprite_seeing.setFlag(SpriteFlag.DestroyOnWall, true)
+            sprite_seeing.setFlag(SpriteFlag.AutoDestroy, true)
+            sprites.setDataSprite(sprite_seeing, "saw_from", sprite)
+            sprite_seeing.setKind(SpriteKind.Seeing)
+        }
+    }
+    pause(200)
 })
 // From: https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
 // 
@@ -782,5 +1045,15 @@ game.onUpdateInterval(500, function () {
     if (info.score() <= 0) {
         controller.moveSprite(sprite_hero, 50, 50)
         running = false
+    }
+})
+game.onUpdateInterval(10000, function () {
+    if (in_game) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            if (!(scene.spriteIsFollowingPath(sprite)) && !(sprites.readDataBoolean(sprite, "see_player"))) {
+                end_location = tiles.getTilesByType(sprites.dungeon.darkGroundCenter)[randint(0, tiles.getTilesByType(sprites.dungeon.darkGroundCenter).length - 1)]
+                scene.followPath(sprite, scene.aStar(tiles.locationOfSprite(sprite), end_location), 25)
+            }
+        }
     }
 })
