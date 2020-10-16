@@ -1,6 +1,8 @@
 namespace SpriteKind {
     export const Chest = SpriteKind.create()
     export const Seeing = SpriteKind.create()
+    export const Snake = SpriteKind.create()
+    export const Compass = SpriteKind.create()
 }
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function (sprite, location) {
     if (in_game) {
@@ -270,6 +272,164 @@ function set_hero_animations () {
     )
     character.setCharacterAnimationsEnabled(sprite_hero, true)
 }
+function update_compass (player_x: number, player_y: number, target_x: number, target_y: number) {
+    local_radians_to_target = Math.atan2(player_y - target_y, player_x - target_x)
+    local_degree_to_target = 180 * local_radians_to_target / Math.atan2(0, -1)
+    sprite_compass.setFlag(SpriteFlag.Invisible, false)
+    if (within_range(local_degree_to_target, 90, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 2 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 2 1 1 1 1 1 f . . 
+            f 1 1 1 1 1 1 2 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 2 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 2 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 c 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 c 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 c 1 1 1 1 1 1 f . 
+            . f 1 1 1 1 1 c 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 c 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, 135, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 2 1 f . . 
+            f 1 1 1 1 1 1 1 1 1 2 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 2 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 2 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 c 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 c 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 c 1 1 1 1 1 1 1 1 1 f . 
+            . f 1 c 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, 180, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 c c c c c f 2 2 2 2 2 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, -135, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 c 1 1 1 1 1 1 1 1 1 f . . 
+            f 1 1 1 c 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 c 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 c 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 2 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 2 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 2 1 1 1 f . 
+            . f 1 1 1 1 1 1 1 1 1 2 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, -90, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 c 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 c 1 1 1 1 1 f . . 
+            f 1 1 1 1 1 1 c 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 c 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 c 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 2 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 2 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 2 1 1 1 1 1 1 f . 
+            . f 1 1 1 1 1 2 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 2 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, -45, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 c 1 f . . 
+            f 1 1 1 1 1 1 1 1 1 c 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 c 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 c 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 2 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 2 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 2 1 1 1 1 1 1 1 1 1 f . 
+            . f 1 2 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, 0, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 2 2 2 2 2 f c c c c c 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    } else if (within_range(local_degree_to_target, 45, 22)) {
+        sprite_compass.setImage(img`
+            . . . . f f f f f f f . . . . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . f 1 2 1 1 1 1 1 1 1 1 1 f . . 
+            f 1 1 1 2 1 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 2 1 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 2 1 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 c 1 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 c 1 1 1 1 f . 
+            f 1 1 1 1 1 1 1 1 1 c 1 1 1 f . 
+            . f 1 1 1 1 1 1 1 1 1 c 1 f . . 
+            . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+            . . f f 1 1 1 1 1 1 1 f f . . . 
+            . . . . f f f f f f f . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `)
+    }
+}
 function set_loot_tables () {
     // Format:
     // 0: Name
@@ -303,6 +463,9 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
         running = true
     }
 })
+function within_range (x: number, middle: number, difference: number) {
+    return x < middle + difference && x > middle - difference
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSprite) {
     if (!(sprites.readDataBoolean(otherSprite, "opened"))) {
         pause(100)
@@ -357,6 +520,9 @@ function summon_snake () {
     tiles.placeOnRandomTile(sprite_snake, sprites.dungeon.darkGroundCenter)
     sprites.setDataBoolean(sprite_snake, "see_player", false)
     sprites.setDataNumber(sprite_snake, "see_cooldown", 10)
+    sprites.setDataNumber(sprite_snake, "damage_rate", 0)
+    sprites.setDataNumber(sprite_snake, "damage", -1)
+    sprites.setDataString(sprite_snake, "species", "snake")
     character.loopFrames(
     sprite_snake,
     [img`
@@ -536,6 +702,36 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherS
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
     otherSprite.destroy()
 })
+function summon_bat () {
+    sprite_bat = sprites.create(img`
+        . . f f f . . . . . . . . f f f 
+        . f f c c . . . . . . f c b b c 
+        f f c c . . . . . . f c b b c . 
+        f c f c . . . . . . f b c c c . 
+        f f f c c . c c . f c b b c c . 
+        f f c 3 c c 3 c c f b c b b c . 
+        f f b 3 b c 3 b c f b c c b c . 
+        . c b b b b b b c b b c c c . . 
+        . c 1 b b b 1 b b c c c c . . . 
+        c b b b b b b b b b c c . . . . 
+        c b c b b b c b b b b f . . . . 
+        f b 1 f f f 1 b b b b f c . . . 
+        f b b b b b b b b b b f c c . . 
+        . f b b b b b b b b c f . . . . 
+        . . f b b b b b b c f . . . . . 
+        . . . f f f f f f f . . . . . . 
+        `, SpriteKind.Enemy)
+    local_random = randint(0, 3)
+    if (local_random == 0) {
+        tiles.placeOnRandomTile(sprite_bat, sprites.dungeon.doorClosedNorth)
+    } else if (local_random == 1) {
+        tiles.placeOnRandomTile(sprite_bat, sprites.dungeon.doorClosedWest)
+    } else if (local_random == 2) {
+        tiles.placeOnRandomTile(sprite_bat, sprites.dungeon.doorClosedSouth)
+    } else {
+        tiles.placeOnRandomTile(sprite_bat, sprites.dungeon.doorClosedEast)
+    }
+}
 function pause_enemies () {
     paused = true
     for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
@@ -545,10 +741,11 @@ function pause_enemies () {
 }
 scene.onOverlapTile(SpriteKind.Player, myTiles.tile1, function (sprite, location) {
     tiles.setTileAt(location, myTiles.tile2)
-    chests_left = tiles.getTilesByType(myTiles.tile1).length
-    chests_opened = tiles.getTilesByType(myTiles.tile2).length
-    if (!(got_loot)) {
-        if (chests_left == 0 || Math.percentChance(chests_opened * 2.5) || true) {
+    console.logValue("location position", "" + tiles.locationXY(location, tiles.XY.row) + ", " + tiles.locationXY(location, tiles.XY.column))
+    console.logValue("loot position", "" + tiles.locationXY(loot_pos, tiles.XY.row) + ", " + tiles.locationXY(loot_pos, tiles.XY.column))
+    console.logValue("got loot", got_loot)
+    if (tiles.locationXY(location, tiles.XY.row) == tiles.locationXY(loot_pos, tiles.XY.row) && tiles.locationXY(location, tiles.XY.column) == tiles.locationXY(loot_pos, tiles.XY.column) || false) {
+        if (!(got_loot)) {
             pause_enemies()
             got_loot = true
             artifacts_obtained = [get_random_loot(), get_random_loot(), get_random_loot()]
@@ -627,55 +824,72 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
     }
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    if (true) {
-        info.changeLifeBy(-1)
+    if (false) {
+        timer.throttle(sprites.readDataString(otherSprite, "species"), sprites.readDataNumber(otherSprite, "damage_rate"), function () {
+            info.changeLifeBy(sprites.readDataNumber(otherSprite, "damage"))
+        })
     }
-    if (character.matchesRule(sprite, character.rule(Predicate.FacingLeft))) {
-        otherSprite.setImage(img`
-            . . . . . c c c c c c c . . . . 
-            . . . . c 6 7 7 7 7 7 6 c . . . 
-            . . . c 7 c 6 6 6 6 c 7 6 c . . 
-            . . c 6 7 6 f 6 6 f 6 7 7 c . . 
-            . . c 7 7 7 7 7 7 7 7 7 7 c . . 
-            . . f 7 8 1 f f 1 6 7 7 7 f . . 
-            . . f 6 f 1 f f 1 f 7 7 7 f . . 
-            . . . f f 2 2 2 2 f 7 7 6 f . . 
-            . . c c f 2 2 2 2 7 7 6 f c . . 
-            . c 7 7 7 7 7 7 7 7 c c 7 7 c . 
-            c 7 1 1 1 7 7 7 7 f c 6 7 7 7 c 
-            f 1 1 1 1 1 7 6 f c c 6 6 6 c c 
-            f 1 1 1 1 1 1 6 6 c 6 6 6 c . . 
-            f 6 1 1 1 1 1 6 6 6 6 6 6 c . . 
-            . f 6 1 1 1 1 1 6 6 6 6 c . . . 
-            . . f f c c c c c c c c . . . . 
-            `)
-    } else {
-        otherSprite.setImage(img`
-            . . . . c c c c c c c . . . . . 
-            . . . c 6 7 7 7 7 7 6 c . . . . 
-            . . c 6 7 c 6 6 6 6 c 7 c . . . 
-            . . c 7 7 6 f 6 6 f 6 7 6 c . . 
-            . . c 7 7 7 7 7 7 7 7 7 7 c . . 
-            . . f 7 7 7 6 1 f f 1 8 7 f . . 
-            . . f 7 7 7 f 1 f f 1 f 6 f . . 
-            . . f 6 7 7 f 2 2 2 2 f f . . . 
-            . . c f 6 7 7 2 2 2 2 f c c . . 
-            . c 7 7 c c 7 7 7 7 7 7 7 7 c . 
-            c 7 7 7 6 c f 7 7 7 7 1 1 1 7 c 
-            c c 6 6 6 c c f 6 7 1 1 1 1 1 f 
-            . . c 6 6 6 c 6 6 1 1 1 1 1 1 f 
-            . . c 6 6 6 6 6 6 1 1 1 1 1 6 f 
-            . . . c 6 6 6 6 1 1 1 1 1 6 f . 
-            . . . . c c c c c c c c f f . . 
-            `)
+    if (sprites.readDataString(otherSprite, "species") == "snake") {
+        if (character.matchesRule(sprite, character.rule(Predicate.FacingLeft))) {
+            otherSprite.setImage(img`
+                . . . . . c c c c c c c . . . . 
+                . . . . c 6 7 7 7 7 7 6 c . . . 
+                . . . c 7 c 6 6 6 6 c 7 6 c . . 
+                . . c 6 7 6 f 6 6 f 6 7 7 c . . 
+                . . c 7 7 7 7 7 7 7 7 7 7 c . . 
+                . . f 7 8 1 f f 1 6 7 7 7 f . . 
+                . . f 6 f 1 f f 1 f 7 7 7 f . . 
+                . . . f f 2 2 2 2 f 7 7 6 f . . 
+                . . c c f 2 2 2 2 7 7 6 f c . . 
+                . c 7 7 7 7 7 7 7 7 c c 7 7 c . 
+                c 7 1 1 1 7 7 7 7 f c 6 7 7 7 c 
+                f 1 1 1 1 1 7 6 f c c 6 6 6 c c 
+                f 1 1 1 1 1 1 6 6 c 6 6 6 c . . 
+                f 6 1 1 1 1 1 6 6 6 6 6 6 c . . 
+                . f 6 1 1 1 1 1 6 6 6 6 c . . . 
+                . . f f c c c c c c c c . . . . 
+                `)
+        } else {
+            otherSprite.setImage(img`
+                . . . . c c c c c c c . . . . . 
+                . . . c 6 7 7 7 7 7 6 c . . . . 
+                . . c 6 7 c 6 6 6 6 c 7 c . . . 
+                . . c 7 7 6 f 6 6 f 6 7 6 c . . 
+                . . c 7 7 7 7 7 7 7 7 7 7 c . . 
+                . . f 7 7 7 6 1 f f 1 8 7 f . . 
+                . . f 7 7 7 f 1 f f 1 f 6 f . . 
+                . . f 6 7 7 f 2 2 2 2 f f . . . 
+                . . c f 6 7 7 2 2 2 2 f c c . . 
+                . c 7 7 c c 7 7 7 7 7 7 7 7 c . 
+                c 7 7 7 6 c f 7 7 7 7 1 1 1 7 c 
+                c c 6 6 6 c c f 6 7 1 1 1 1 1 f 
+                . . c 6 6 6 c 6 6 1 1 1 1 1 1 f 
+                . . c 6 6 6 6 6 6 1 1 1 1 1 6 f 
+                . . . c 6 6 6 6 1 1 1 1 1 6 f . 
+                . . . . c c c c c c c c f f . . 
+                `)
+        }
     }
 })
+// TODO:
+// 
+// - COMPASS
+// - Bats that will -1 every 1000ms. Start spawning at 20 clank, with clank chance / 2 every 5000ms
+// - Ghosts that will -3 every 500ms (can go through walls) start spawning at 50 clank, with clank chance / 2 every 10000ms
+// 
+// TODO for 1.0:
+// 
+// - Hide seeing sprites
+// - Enable text explanation at start
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
 let local_set = ""
 let local_rarity = ""
 let local_chance = 0
+let loot_pos: tiles.Location = null
+let local_random = 0
+let sprite_bat: Sprite = null
 let local_coins = 0
 let user_coins = 0
 let local_coins_got = 0
@@ -683,15 +897,16 @@ let sprite_snake: Sprite = null
 let coins_chance = 0
 let loot_sets: string[] = []
 let loot_table: string[][] = []
+let local_degree_to_target = 0
+let local_radians_to_target = 0
 let artifacts_obtained: string[][] = []
-let chests_opened = 0
-let chests_left = 0
 let end_game = false
 let in_game = false
 let paused = false
 let running = false
 let got_loot = false
 let user_artifacts: string[][] = []
+let sprite_compass: Sprite = null
 let sprite_artifact_chest: Sprite = null
 let sprite_hero: Sprite = null
 sprite_hero = sprites.create(img`
@@ -738,6 +953,28 @@ sprite_artifact_chest = sprites.create(img`
     `, SpriteKind.Chest)
 sprites.setDataBoolean(sprite_artifact_chest, "opened", false)
 sprite_artifact_chest.z = 5
+sprite_compass = sprites.create(img`
+    . . . . f f f f f f f . . . . . 
+    . . f f 1 1 1 1 1 1 1 f f . . . 
+    . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+    . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+    f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+    f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+    f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+    f 1 1 1 1 1 1 f 1 1 1 1 1 1 f . 
+    f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+    f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+    f 1 1 1 1 1 1 1 1 1 1 1 1 1 f . 
+    . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+    . f 1 1 1 1 1 1 1 1 1 1 1 f . . 
+    . . f f 1 1 1 1 1 1 1 f f . . . 
+    . . . . f f f f f f f . . . . . 
+    . . . . . . . . . . . . . . . . 
+    `, SpriteKind.Compass)
+sprite_compass.setFlag(SpriteFlag.RelativeToCamera, true)
+sprite_compass.setFlag(SpriteFlag.Invisible, true)
+sprite_compass.left = 2
+sprite_compass.bottom = scene.screenHeight() - 1
 // Format:
 // 0: Name
 // 1: Description
@@ -747,7 +984,7 @@ sprite_artifact_chest.z = 5
 // 
 // Example:
 // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
-user_artifacts = [["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]]
+user_artifacts = [["", "", "", "", ""]]
 user_artifacts.pop()
 info.setScore(20)
 info.setLife(20)
@@ -758,8 +995,6 @@ in_game = false
 end_game = false
 let clank = 5
 let clank_multiplier = 1
-chests_left = 0
-chests_opened = 0
 artifacts_obtained = []
 set_loot_tables()
 scene.setBackgroundColor(15)
@@ -795,6 +1030,7 @@ game.onUpdate(function () {
                     tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
                     start_time = game.runtime()
                     in_game = true
+                    loot_pos = tiles.getTilesByType(myTiles.tile1)[randint(0, tiles.getTilesByType(myTiles.tile1).length - 1)]
                     for (let index = 0; index < 3; index++) {
                         summon_snake()
                     }
@@ -883,25 +1119,6 @@ game.onUpdate(function () {
         }
     }
 })
-game.onUpdateInterval(5000, function () {
-    if (true) {
-        sprite_hero.say(clank)
-    }
-    if (in_game && !(paused)) {
-        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
-            clank_multiplier = 1
-        } else {
-            if (running) {
-                clank_multiplier = 2
-            } else {
-                clank_multiplier = 4
-            }
-        }
-        if (Math.percentChance(clank * clank_multiplier)) {
-            clank += 1
-        }
-    }
-})
 game.onUpdateInterval(50, function () {
     if (sprites.readDataBoolean(sprite_hero, "on_fire")) {
         info.changeLifeBy(-1)
@@ -919,20 +1136,24 @@ game.onUpdateInterval(2000, function () {
         })
     }
 })
-forever(function () {
-    if (in_game) {
-        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
-            sprite_seeing = sprites.createProjectileFromSprite(img`
-                3 
-                `, sprite, (sprite_hero.x - sprite.x) * 10, (sprite_hero.y - sprite.y) * 10)
-            sprite_seeing.setFlag(SpriteFlag.Invisible, false)
-            sprite_seeing.setFlag(SpriteFlag.DestroyOnWall, true)
-            sprite_seeing.setFlag(SpriteFlag.AutoDestroy, true)
-            sprites.setDataSprite(sprite_seeing, "saw_from", sprite)
-            sprite_seeing.setKind(SpriteKind.Seeing)
+game.onUpdateInterval(2000, function () {
+    if (in_game && true) {
+        sprite_hero.say(clank)
+    }
+    if (in_game && !(paused)) {
+        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
+            clank_multiplier = 1
+        } else {
+            if (running) {
+                clank_multiplier = 2
+            } else {
+                clank_multiplier = 4
+            }
+        }
+        if (Math.percentChance(clank * clank_multiplier)) {
+            clank += 1
         }
     }
-    pause(200)
 })
 // From: https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
 // 
@@ -1034,9 +1255,18 @@ forever(function () {
         }
     }
     if (false) {
-        music.playTone(104, music.beat(BeatFraction.Sixteenth))
-        music.rest(music.beat(BeatFraction.Half))
+        for (let index = 0; index < 2; index++) {
+            music.playTone(104, music.beat(BeatFraction.Sixteenth))
+            music.rest(music.beat(BeatFraction.Half))
+        }
+        music.rest(music.beat(BeatFraction.Double))
     }
+})
+forever(function () {
+    if (in_game) {
+        update_compass(tiles.locationXY(tiles.locationOfSprite(sprite_hero), tiles.XY.column), tiles.locationXY(tiles.locationOfSprite(sprite_hero), tiles.XY.row), tiles.locationXY(loot_pos, tiles.XY.column), tiles.locationXY(loot_pos, tiles.XY.row))
+    }
+    pause(100)
 })
 game.onUpdateInterval(500, function () {
     if (running && character.matchesRule(sprite_hero, character.rule(Predicate.Moving))) {
@@ -1045,6 +1275,20 @@ game.onUpdateInterval(500, function () {
     if (info.score() <= 0) {
         controller.moveSprite(sprite_hero, 50, 50)
         running = false
+    }
+})
+game.onUpdateInterval(200, function () {
+    if (in_game) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite_seeing = sprites.createProjectileFromSprite(img`
+                3 
+                `, sprite, (sprite_hero.x - sprite.x) * 10, (sprite_hero.y - sprite.y) * 10)
+            sprite_seeing.setFlag(SpriteFlag.Invisible, false)
+            sprite_seeing.setFlag(SpriteFlag.DestroyOnWall, true)
+            sprite_seeing.setFlag(SpriteFlag.AutoDestroy, true)
+            sprites.setDataSprite(sprite_seeing, "saw_from", sprite)
+            sprite_seeing.setKind(SpriteKind.Seeing)
+        }
     }
 })
 game.onUpdateInterval(10000, function () {
