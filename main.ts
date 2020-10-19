@@ -731,6 +731,91 @@ function summon_bat () {
     } else {
         tiles.placeOnRandomTile(sprite_bat, sprites.dungeon.doorClosedEast)
     }
+    sprites.setDataBoolean(sprite_bat, "see_player", false)
+    sprites.setDataNumber(sprite_bat, "see_cooldown", 10)
+    sprites.setDataNumber(sprite_bat, "damage_rate", 1000)
+    sprites.setDataNumber(sprite_bat, "damage", -1)
+    sprites.setDataString(sprite_bat, "species", "bat")
+    character.loopFrames(
+    sprite_bat,
+    [img`
+        . . f f f . . . . . . . . f f f 
+        . f f c c . . . . . . f c b b c 
+        f f c c . . . . . . f c b b c . 
+        f c f c . . . . . . f b c c c . 
+        f f f c c . c c . f c b b c c . 
+        f f c 3 c c 3 c c f b c b b c . 
+        f f b 3 b c 3 b c f b c c b c . 
+        . c b b b b b b c b b c c c . . 
+        . c 1 b b b 1 b b c c c c . . . 
+        c b b b b b b b b b c c . . . . 
+        c b c b b b c b b b b f . . . . 
+        f b 1 f f f 1 b b b b f c . . . 
+        f b b b b b b b b b b f c c . . 
+        . f b b b b b b b b c f . . . . 
+        . . f b b b b b b c f . . . . . 
+        . . . f f f f f f f . . . . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . c c . . c c . . . . . . . . 
+        . . c 3 c c 3 c c c . . . . . . 
+        . c b 3 b c 3 b c c c . . . . . 
+        . c b b b b b b b b f f . . . . 
+        c c b b b b b b b b f f . . . . 
+        c b 1 b b b 1 b b c f f f . . . 
+        c b b b b b b b b f f f f . . . 
+        f b c b b b c b c c b b b . . . 
+        f b 1 f f f 1 b f c c c c . . . 
+        . f b b b b b b f b b c c . . . 
+        c c f b b b b b c c b b c . . . 
+        c c c f f f f f f c c b b c . . 
+        . c c c . . . . . . c c c c c . 
+        . . c c c . . . . . . . c c c c 
+        . . . . . . . . . . . . . . . . 
+        `],
+    500,
+    character.rule(Predicate.FacingLeft)
+    )
+    character.loopFrames(
+    sprite_bat,
+    [img`
+        f f f . . . . . . . . f f f . . 
+        c b b c f . . . . . . c c f f . 
+        . c b b c f . . . . . . c c f f 
+        . c c c b f . . . . . . c f c f 
+        . c c b b c f . c c . c c f f f 
+        . c b b c b f c c 3 c c 3 c f f 
+        . c b c c b f c b 3 c b 3 b f f 
+        . . c c c b b c b b b b b b c . 
+        . . . c c c c b b 1 b b b 1 c . 
+        . . . . c c b b b b b b b b b c 
+        . . . . f b b b b c b b b c b c 
+        . . . c f b b b b 1 f f f 1 b f 
+        . . c c f b b b b b b b b b b f 
+        . . . . f c b b b b b b b b f . 
+        . . . . . f c b b b b b b f . . 
+        . . . . . . f f f f f f f . . . 
+        `,img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . c c . . c c . . 
+        . . . . . . c c c 3 c c 3 c . . 
+        . . . . . c c c b 3 c b 3 b c . 
+        . . . . f f b b b b b b b b c . 
+        . . . . f f b b b b b b b b c c 
+        . . . f f f c b b 1 b b b 1 b c 
+        . . . f f f f b b b b b b b b c 
+        . . . b b b c c b c b b b c b f 
+        . . . c c c c f b 1 f f f 1 b f 
+        . . . c c b b f b b b b b b f . 
+        . . . c b b c c b b b b b f c c 
+        . . c b b c c f f f f f f c c c 
+        . c c c c c . . . . . . c c c . 
+        c c c c . . . . . . . c c c . . 
+        . . . . . . . . . . . . . . . . 
+        `],
+    500,
+    character.rule(Predicate.FacingRight)
+    )
 }
 function pause_enemies () {
     paused = true
@@ -869,6 +954,46 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
                 . . . . c c c c c c c c f f . . 
                 `)
         }
+    } else if (sprites.readDataString(otherSprite, "species") == "bat") {
+        if (character.matchesRule(sprite, character.rule(Predicate.FacingLeft))) {
+            otherSprite.setImage(img`
+                . . f f f . . . . . . . . f f f 
+                . f f c c . . . . . . f c b b c 
+                f f c c . . . . . . f c b b c . 
+                f c f c . . . . . . f b c c c . 
+                f f f c c . c c . f c b b c c . 
+                f f c 3 c c 3 c c f b c b b c . 
+                f f b 3 b c 3 b c f b c c b c . 
+                . c 1 b b b 1 b c b b c c c . . 
+                . c 1 b b b 1 b b c c c c . . . 
+                c b b b b b b b b b c c . . . . 
+                c b 1 f f 1 c b b b b f . . . . 
+                f f 1 f f 1 f b b b b f c . . . 
+                f f 2 2 2 2 f b b b b f c c . . 
+                . f 2 2 2 2 b b b b c f . . . . 
+                . . f b b b b b b c f . . . . . 
+                . . . f f f f f f f . . . . . . 
+                `)
+        } else {
+            otherSprite.setImage(img`
+                f f f . . . . . . . . f f f . . 
+                c b b c f . . . . . . c c f f . 
+                . c b b c f . . . . . . c c f f 
+                . c c c b f . . . . . . c f c f 
+                . c c b b c f . c c . c c f f f 
+                . c b b c b f c c 3 c c 3 c f f 
+                . c b c c b f c b 3 c b 3 b f f 
+                . . c c c b b c b 1 b b b 1 c . 
+                . . . c c c c b b 1 b b b 1 c . 
+                . . . . c c b b b b b b b b b c 
+                . . . . f b b b b c 1 f f 1 b c 
+                . . . c f b b b b f 1 f f 1 f f 
+                . . c c f b b b b f 2 2 2 2 f f 
+                . . . . f c b b b b 2 2 2 2 f . 
+                . . . . . f c b b b b b b f . . 
+                . . . . . . f f f f f f f . . . 
+                `)
+        }
     }
 })
 // TODO:
@@ -881,6 +1006,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // 
 // - Hide seeing sprites
 // - Enable text explanation at start
+// - Enable damage
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
@@ -1154,6 +1280,18 @@ game.onUpdateInterval(2000, function () {
             clank += 1
         }
     }
+})
+forever(function () {
+    if (in_game) {
+        if (sprites.allOfKind(SpriteKind.Enemy).length < 100) {
+            if (clank >= 20 || false) {
+                if (Math.percentChance(clank) || false) {
+                    summon_bat()
+                }
+            }
+        }
+    }
+    pause(5000)
 })
 // From: https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
 // 
