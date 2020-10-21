@@ -1061,8 +1061,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 })
 // TODO:
 // 
-// - Food to regen health (beast bites that slow you down to 20 vx and 20 vy while eating for 1 sec, restores 2 health)
-// - Implement eating cookies
+// - Bigger dungeon! (Gotta keep expanding!)
 // - Ghosts that will -3 every 500ms (can go through walls) start spawning at 50 clank, with clank chance / 2 every 10000ms
 // 
 // TODO for 1.0:
@@ -1072,6 +1071,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // - Enable damage
 // - Changelogs sprite (like chest) in lobby post 1.0
 // - Starting melody would be cool
+// - Able to walk through monster spawners but cost 3-5 health and teleports to other random spawner.
+// "These are black holes. You can go through them, but it hurts! Try?"
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
