@@ -17,6 +17,26 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function
 function unpause_enemies () {
     paused = false
 }
+function instructions () {
+    game.showLongText("Welcome to a horrible clone of TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
+    game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
+    game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or food!", DialogLayout.Bottom)
+    game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager) " + "They will be patrolling the dungeon, " + "and if they get hold of you, you'll die!" + "", DialogLayout.Bottom)
+    game.showLongText("The longer you stay in the dungeon, " + "the more clank you will generate. " + "This will awaken bats and ghost, " + "(which can fly through walls) " + "which won't be good!", DialogLayout.Bottom)
+    game.showLongText("When you are ready to enter, head through the doors on the right.", DialogLayout.Bottom)
+    game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+}
+function count_random_cookies (max: number) {
+    local_cookies = 0
+    for (let index = 0; index <= max; index++) {
+        if (Math.percentChance(coins_chance - index)) {
+            local_cookies += 1
+        } else {
+            return local_cookies
+        }
+    }
+    return local_cookies
+}
 function set_hero_animations () {
     character.loopFrames(
     sprite_hero,
@@ -272,6 +292,26 @@ function set_hero_animations () {
     )
     character.setCharacterAnimationsEnabled(sprite_hero, true)
 }
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    timer.throttle("try_eat_cookie", 2000, function () {
+        if (user_cookies > 0) {
+            controller.moveSprite(sprite_hero, 20, 20)
+            running = false
+            sprite_hero.startEffect(effects.trail)
+            timer.after(2000, function () {
+                controller.moveSprite(sprite_hero, 50, 50)
+                effects.clearParticles(sprite_hero)
+                if (controller.B.isPressed()) {
+                    user_cookies += -1
+                    info.changeLifeBy(2)
+                    sprite_hero.say("" + user_cookies + " cookie(s) left!", 2000)
+                }
+            })
+        } else {
+            sprite_hero.say("No cookies. :(", 2000)
+        }
+    })
+})
 function update_compass (player_x: number, player_y: number, target_x: number, target_y: number) {
     local_radians_to_target = Math.atan2(player_y - target_y, player_x - target_x)
     local_degree_to_target = 180 * local_radians_to_target / Math.atan2(0, -1)
@@ -456,6 +496,18 @@ function set_loot_tables () {
     ]
     loot_sets = ["car", "fruit", "desert", "food"]
     coins_chance = 50
+}
+function get_random_cookies (max: number) {
+    pause_enemies()
+    local_cookies_got = count_random_cookies(max)
+    user_cookies += local_cookies_got
+    if (local_cookies_got == 0) {
+        game.showLongText("Dang, you didn't get anything! :(", DialogLayout.Bottom)
+    } else {
+        game.showLongText("Oh look, you found some cookies!", DialogLayout.Bottom)
+        game.showLongText("You found:\\n" + local_cookies_got + " cookie(s)!", DialogLayout.Center)
+    }
+    unpause_enemies()
 }
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (info.score() > 0) {
@@ -658,7 +710,7 @@ function get_random_coins (max: number) {
     local_coins_got = count_random_coins(max)
     user_coins += local_coins_got
     if (local_coins_got == 0) {
-        game.showLongText("Dang, you didn't get any coins! :(", DialogLayout.Bottom)
+        game.showLongText("Dang, you didn't get anything! :(", DialogLayout.Bottom)
     } else {
         game.showLongText("Oh look, you found some coins!", DialogLayout.Bottom)
         game.showLongText("You found:\\n" + local_coins_got + " coin(s)!", DialogLayout.Center)
@@ -696,11 +748,18 @@ sprites.onDestroyed(SpriteKind.Seeing, function (sprite) {
 })
 info.onLifeZero(function () {
     info.setScore(user_coins)
-    game.over(false)
+    sprite_hero.destroy()
+    timer.after(5000, function () {
+        game.over(false, effects.melt)
+    })
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
     otherSprite.destroy()
+})
+controller.B.onEvent(ControllerButtonEvent.Released, function () {
+    controller.moveSprite(sprite_hero, 50, 50)
+    effects.clearParticles(sprite_hero)
 })
 function summon_bat () {
     sprite_bat = sprites.create(img`
@@ -847,7 +906,11 @@ scene.onOverlapTile(SpriteKind.Player, myTiles.tile1, function (sprite, location
             get_random_coins(10)
         }
     } else {
-        get_random_coins(10)
+        if (Math.percentChance(50)) {
+            get_random_coins(10)
+        } else {
+            get_random_cookies(5)
+        }
     }
 })
 function get_random_loot () {
@@ -998,8 +1061,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 })
 // TODO:
 // 
-// - COMPASS
-// - Bats that will -1 every 1000ms. Start spawning at 20 clank, with clank chance / 2 every 5000ms
+// - Food to regen health (beast bites that slow you down to 20 vx and 20 vy while eating for 1 sec, restores 2 health)
+// - Implement eating cookies
 // - Ghosts that will -3 every 500ms (can go through walls) start spawning at 50 clank, with clank chance / 2 every 10000ms
 // 
 // TODO for 1.0:
@@ -1007,6 +1070,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // - Hide seeing sprites
 // - Enable text explanation at start
 // - Enable damage
+// - Changelogs sprite (like chest) in lobby post 1.0
+// - Starting melody would be cool
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
@@ -1017,20 +1082,23 @@ let loot_pos: tiles.Location = null
 let local_random = 0
 let sprite_bat: Sprite = null
 let local_coins = 0
-let user_coins = 0
 let local_coins_got = 0
 let sprite_snake: Sprite = null
-let coins_chance = 0
+let local_cookies_got = 0
 let loot_sets: string[] = []
 let loot_table: string[][] = []
 let local_degree_to_target = 0
 let local_radians_to_target = 0
+let coins_chance = 0
+let local_cookies = 0
 let artifacts_obtained: string[][] = []
 let end_game = false
 let in_game = false
 let paused = false
 let running = false
 let got_loot = false
+let user_cookies = 0
+let user_coins = 0
 let user_artifacts: string[][] = []
 let sprite_compass: Sprite = null
 let sprite_artifact_chest: Sprite = null
@@ -1112,6 +1180,8 @@ sprite_compass.bottom = scene.screenHeight() - 1
 // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
 user_artifacts = [["", "", "", "", ""]]
 user_artifacts.pop()
+user_coins = 0
+user_cookies = 0
 info.setScore(20)
 info.setLife(20)
 got_loot = false
@@ -1130,13 +1200,7 @@ tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 7))
 tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
 pause(100)
 if (false) {
-    game.showLongText("Welcome to TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
-    game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
-    game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or maybe even the occasional power up!", DialogLayout.Bottom)
-    game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager)" + "They will be patrolling the dungeon, " + "and if they get hold of you, you'll die!" + "", DialogLayout.Bottom)
-    game.showLongText("The longer you stay in the dungeon, the more clank you will generate. This will awaken bats and ghost, which won't be good!", DialogLayout.Bottom)
-    game.showLongText("When you are ready to enter, head through the doors on the right.", DialogLayout.Bottom)
-    game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+    instructions()
 }
 game.onUpdate(function () {
     if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.doorOpenEast) && !(in_game)) {
@@ -1244,6 +1308,9 @@ game.onUpdate(function () {
             sprite.y = sprites.readDataNumber(sprite, "paused_y")
         }
     }
+})
+game.onUpdateInterval(5000, function () {
+    control.heapSnapshot()
 })
 game.onUpdateInterval(50, function () {
     if (sprites.readDataBoolean(sprite_hero, "on_fire")) {
