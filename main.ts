@@ -3,6 +3,8 @@ namespace SpriteKind {
     export const Seeing = SpriteKind.create()
     export const Snake = SpriteKind.create()
     export const Compass = SpriteKind.create()
+    export const Info = SpriteKind.create()
+    export const Clear_settings = SpriteKind.create()
 }
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function (sprite, location) {
     if (in_game) {
@@ -293,24 +295,30 @@ function set_hero_animations () {
     character.setCharacterAnimationsEnabled(sprite_hero, true)
 }
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    timer.throttle("try_eat_cookie", 2000, function () {
-        if (user_cookies > 0) {
-            controller.moveSprite(sprite_hero, 20, 20)
-            running = false
-            sprite_hero.startEffect(effects.trail)
-            timer.after(2000, function () {
-                controller.moveSprite(sprite_hero, 50, 50)
-                effects.clearParticles(sprite_hero)
-                if (controller.B.isPressed()) {
-                    user_cookies += -1
-                    info.changeLifeBy(2)
-                    sprite_hero.say("" + user_cookies + " cookie(s) left!", 2000)
+    if (in_game) {
+        timer.throttle("try_eat_cookie", 2000, function () {
+            if (user_cookies > 0 && info.life() <= 18) {
+                controller.moveSprite(sprite_hero, 20, 20)
+                running = false
+                sprite_hero.startEffect(effects.trail)
+                timer.after(2000, function () {
+                    controller.moveSprite(sprite_hero, 50, 50)
+                    effects.clearParticles(sprite_hero)
+                    if (controller.B.isPressed()) {
+                        user_cookies += -1
+                        info.changeLifeBy(2)
+                        sprite_hero.say("" + user_cookies + " cookie(s) left!", 2000)
+                    }
+                })
+            } else {
+                if (info.life() > 18) {
+                    sprite_hero.say("Full on health!", 2000)
+                } else {
+                    sprite_hero.say("No cookies. :(", 2000)
                 }
-            })
-        } else {
-            sprite_hero.say("No cookies. :(", 2000)
-        }
-    })
+            }
+        })
+    }
 })
 function update_compass (player_x: number, player_y: number, target_x: number, target_y: number) {
     local_radians_to_target = Math.atan2(player_y - target_y, player_x - target_x)
@@ -509,6 +517,21 @@ function get_random_cookies (max: number) {
     }
     unpause_enemies()
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Clear_settings, function (sprite, otherSprite) {
+    while (sprite.overlapsWith(otherSprite)) {
+        sprite.x += -2
+        sprite.y += -2
+    }
+    if (game.ask("Are you sure you want", "to reset?") && game.ask("You can't go back after", "this!")) {
+        blockSettings.remove("decked_out_coins")
+        pause(100)
+        game.showLongText("Done clearing data! Restarting!", DialogLayout.Bottom)
+        pause(100)
+        color.startFade(color.originalPalette, color.Black, 1000)
+        color.pauseUntilFadeDone()
+        game.reset()
+    }
+})
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (info.score() > 0) {
         controller.moveSprite(sprite_hero, 75, 75)
@@ -1060,6 +1083,7 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
                 . . . . . . . . . . . . . . . . 
                 `, [myTiles.transparency16], TileScale.Sixteen))
             info.setScore(user_coins)
+            blockSettings.writeNumber("decked_out_coins", blockSettings.readNumber("decked_out_coins") + user_coins)
             for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
                 sprite.destroy()
             }
@@ -1071,7 +1095,7 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
     }
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    if (true) {
+    if (false) {
         timer.throttle(sprites.readDataString(otherSprite, "species"), sprites.readDataNumber(otherSprite, "damage_rate"), function () {
             info.changeLifeBy(sprites.readDataNumber(otherSprite, "damage"))
         })
@@ -1217,7 +1241,9 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // TODO:
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
-// - Make ghosts go through walls
+// - Make ghosts go through walls.
+// - Save artifacts and coins if make it.
+// - Make clear user data button
 // 
 // TODO for 1.0:
 // 
@@ -1304,6 +1330,25 @@ sprite_artifact_chest = sprites.create(img`
     `, SpriteKind.Chest)
 sprites.setDataBoolean(sprite_artifact_chest, "opened", false)
 sprite_artifact_chest.z = 5
+let sprite_reset_settings = sprites.create(img`
+    2 2 . . . . . . . . . . . . 2 2 
+    2 2 2 f f f f f f f f . . 2 2 2 
+    . 2 2 2 b b b b b c f f 2 2 2 . 
+    . . 2 2 2 b b b b c c 2 2 2 . . 
+    . . f 2 2 2 b b b c 2 2 2 f . . 
+    . . f c 2 2 2 b c 2 2 2 c f . . 
+    . . f c c 2 2 2 2 2 2 c c f . . 
+    . . f c c c 2 2 2 2 c c c f . . 
+    . . f c c c 2 2 2 2 c c c f . . 
+    . . f c c 2 2 2 2 2 2 c c f . . 
+    . . f c 2 2 2 d d 2 2 2 c f . . 
+    . . f 2 2 2 c c c c 2 2 2 f . . 
+    . . 2 2 2 d d d d d d 2 2 2 . . 
+    . 2 2 2 d c c c c c c d 2 2 2 . 
+    2 2 2 f f f f f f f f f f 2 2 2 
+    2 2 . . . . . . . . . . . . 2 2 
+    `, SpriteKind.Clear_settings)
+sprite_reset_settings.z = 5
 sprite_compass = sprites.create(img`
     . . . . f f f f f f f . . . . . 
     . . f f 1 1 1 1 1 1 1 f f . . . 
@@ -1337,9 +1382,12 @@ sprite_compass.bottom = scene.screenHeight() - 1
 // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
 user_artifacts = [["", "", "", "", ""]]
 user_artifacts.pop()
+if (!(blockSettings.exists("decked_out_coins"))) {
+    blockSettings.writeNumber("decked_out_coins", 0)
+}
 user_coins = 0
 user_cookies = 0
-info.setScore(20)
+info.setScore(blockSettings.readNumber("decked_out_coins"))
 info.setLife(20)
 got_loot = false
 running = false
@@ -1355,6 +1403,7 @@ tiles.setTilemap(tilemap`level`)
 scene.cameraFollowSprite(sprite_hero)
 tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 7))
 tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
+tiles.placeOnTile(sprite_reset_settings, tiles.getTileLocation(8, 7))
 pause(100)
 if (false) {
     instructions()
@@ -1372,6 +1421,7 @@ game.onUpdate(function () {
                     color.pauseUntilFadeDone()
                     pause(500)
                     sprite_artifact_chest.destroy()
+                    sprite_reset_settings.destroy()
                     sprite_hero.setFlag(SpriteFlag.Invisible, false)
                     tiles.setTilemap(tilemap`level_0`)
                     tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
@@ -1475,15 +1525,17 @@ game.onUpdateInterval(50, function () {
     }
 })
 game.onUpdateInterval(2000, function () {
-    if (!(running) && info.score() < 20) {
-        info.changeScoreBy(1)
-    }
-    if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
-        timer.after(1000, function () {
-            if (info.score() < 20) {
-                info.changeScoreBy(1)
-            }
-        })
+    if (in_game) {
+        if (!(running) && info.score() < 20) {
+            info.changeScoreBy(1)
+        }
+        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
+            timer.after(1000, function () {
+                if (info.score() < 20) {
+                    info.changeScoreBy(1)
+                }
+            })
+        }
     }
 })
 game.onUpdateInterval(2000, function () {
@@ -1634,12 +1686,14 @@ forever(function () {
     pause(100)
 })
 game.onUpdateInterval(500, function () {
-    if (running && character.matchesRule(sprite_hero, character.rule(Predicate.Moving))) {
-        info.changeScoreBy(-1)
-    }
-    if (info.score() <= 0) {
-        controller.moveSprite(sprite_hero, 50, 50)
-        running = false
+    if (in_game) {
+        if (running && character.matchesRule(sprite_hero, character.rule(Predicate.Moving))) {
+            info.changeScoreBy(-1)
+        }
+        if (info.score() <= 0) {
+            controller.moveSprite(sprite_hero, 50, 50)
+            running = false
+        }
     }
 })
 game.onUpdateInterval(200, function () {
