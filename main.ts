@@ -488,21 +488,23 @@ function set_loot_tables () {
     // 
     // Example:
     // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
+    // 
+    // List of sets: https://hermitcraft.fandom.com/wiki/Decked_Out#Sets
     loot_table = [
-    ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"],
-    ["Blue Toy Car", "A blue toy car, fun to play with!", "Uncommon", "car", "uncommon"],
-    ["Pink Toy Car", "A pink toy car, fun to play with!", "Rare", "car", "rare"],
-    ["Fake Apple", "A fake apple for fake meals.", "Common", "fruit", "common"],
-    ["Fake Cherry", "A fake cherry for fake meals.", "Uncommon", "fruit", "uncommon"],
-    ["Fake Strawberry", "A fake strawberry for fake meals.", "Rare", "fruit", "rare"],
-    ["Donut Model", "Fake donuts for advertising.", "Common", "desert", "common"],
-    ["Cake Model", "Fake cakes for advertising.", "Uncommon", "desert", "uncommon"],
-    ["Vanilla Ice Cream Model", "Circus Baby's Ice Cream in Sister Location.", "Rare", "desert", "rare"],
-    ["Plastic Pizza", "A plastic pizza from a cooking set.", "Common", "food", "common"],
-    ["Plastic Burger", "A plastic burger from a cooking set.", "Uncommon", "food", "uncommon"],
-    ["Plastic Taco", "A plastic taco from a cooking set.", "Rare", "food", "rare"]
+    ["Dragon set - Obsidian", "Some really black rock.", "Common", "dragon", "common"],
+    ["Dragon set - End Crystal", "Directly exported from the End dimension.", "Uncommon", "dragon", "uncommon"],
+    ["Dragon set - Dragon's Breath", "Some smelly gas for brewing.", "Rare", "dragon", "rare"],
+    ["Dragon set - Dragon's Head", "Thankfully, it's just a model.", "Unique", "dragon", "unique"],
+    ["Wither set - Soul Sand", "Fresh brown sand direct from the Nether dimension.", "Common", "wither", "common"],
+    ["Wither set - Wither Rose", "A special flower that you don't want to plant.", "Uncommon", "wither", "uncommon"],
+    ["Wither set - Wither Head", "A great spoil of war that's very creepy.", "Rare", "wither", "rare"],
+    ["Wither set - Nether Star", "Looks just like a star...", "Unique", "wither", "unique"],
+    ["Ocean set - Sea Pickle", "A sea pickle that has been pickled for preservation.", "Common", "ocean", "common"],
+    ["Ocean set - Sea Lantern", "Used for lighting up the Ocean Monuments.", "Uncommon", "ocean", "uncommon"],
+    ["Ocean set - Sponge", "A sponge to soak up water, found in Ocean Monuments", "Rare", "ocean", "rare"],
+    ["Ocean set - Heart of the Sea", "The coveted Heart of the Sea.", "Unique", "ocean", "unique"]
     ]
-    loot_sets = ["car", "fruit", "desert", "food"]
+    loot_sets = ["dragon", "wither", "ocean"]
     coins_chance = 50
 }
 function get_random_cookies (max: number) {
@@ -681,6 +683,15 @@ function summon_ghost () {
     character.rule(Predicate.FacingRight)
     )
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Info, function (sprite, otherSprite) {
+    while (sprite.overlapsWith(otherSprite)) {
+        sprite.x += 2
+        sprite.y += -2
+    }
+    if (game.ask("Want to read the", "changelogs?")) {
+        changelogs()
+    }
+})
 function summon_snake () {
     sprite_snake = sprites.create(img`
         . . . . c c c c c c . . . . . . 
@@ -700,7 +711,7 @@ function summon_snake () {
         . f 6 1 1 1 1 1 1 6 6 6 f . . . 
         . . c c c c c c c c c f . . . . 
         `, SpriteKind.Enemy)
-    tiles.placeOnRandomTile(sprite_snake, sprites.dungeon.darkGroundCenter)
+    tp_to_rand_spawner(sprite_snake)
     sprites.setDataBoolean(sprite_snake, "see_player", false)
     sprites.setDataNumber(sprite_snake, "see_cooldown", 10)
     sprites.setDataNumber(sprite_snake, "damage_rate", 0)
@@ -884,6 +895,9 @@ info.onLifeZero(function () {
         game.over(false, effects.melt)
     })
 })
+function changelogs () {
+    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "", DialogLayout.Full)
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
     otherSprite.destroy()
@@ -1038,6 +1052,8 @@ scene.onOverlapTile(SpriteKind.Player, myTiles.tile1, function (sprite, location
 function get_random_loot () {
     local_chance = randint(0, 99)
     if (local_chance >= 90) {
+        local_rarity = "unique"
+    } else if (local_chance >= 80) {
         local_rarity = "rare"
     } else if (local_chance >= 50) {
         local_rarity = "uncommon"
@@ -1050,7 +1066,7 @@ function get_random_loot () {
             return artifact
         }
     }
-    return ["Bug", "You are not supposed to get this!", "Not supposed to happen", "placeholder_return_values", "impossible"]
+    return ["", "", "", "", ""]
 }
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
     if (in_game && !(end_game)) {
@@ -1241,19 +1257,19 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // TODO:
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
-// - Make ghosts go through walls.
-// - Save artifacts and coins if make it.
-// - Make clear user data button
+// - [ ] Make ghosts go through walls.
+// - Save [ ] artifacts and [✔] coins if make it.
+// - Change artifacts to official one, and use 4 of a kind.
 // 
 // TODO for 1.0:
 // 
+// - Write changelogs post 1.0 on every release
 // - Hide seeing sprites
 // - Enable text explanation at start
 // - Enable damage
 // - Changelogs sprite (like chest) in lobby post 1.0
 // - Starting melody would be cool
-// - Able to walk through monster spawners but cost 3-5 health and teleports to other random spawner.
-// "These are black holes. You can go through them, but it hurts! Try?"
+// - Able to walk through monster spawners but cost 3-5 health and teleports to other random spawner. Says "These are black holes. You can go through them, but it hurts! Try?"
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
@@ -1331,8 +1347,8 @@ sprite_artifact_chest = sprites.create(img`
 sprites.setDataBoolean(sprite_artifact_chest, "opened", false)
 sprite_artifact_chest.z = 5
 let sprite_reset_settings = sprites.create(img`
-    2 2 . . . . . . . . . . . . 2 2 
-    2 2 2 f f f f f f f f . . 2 2 2 
+    . . . . . . . . . . . . . . . . 
+    . 2 2 f f f f f f f f . . 2 2 . 
     . 2 2 2 b b b b b c f f 2 2 2 . 
     . . 2 2 2 b b b b c c 2 2 2 . . 
     . . f 2 2 2 b b b c 2 2 2 f . . 
@@ -1345,10 +1361,29 @@ let sprite_reset_settings = sprites.create(img`
     . . f 2 2 2 c c c c 2 2 2 f . . 
     . . 2 2 2 d d d d d d 2 2 2 . . 
     . 2 2 2 d c c c c c c d 2 2 2 . 
-    2 2 2 f f f f f f f f f f 2 2 2 
-    2 2 . . . . . . . . . . . . 2 2 
+    . 2 2 f f f f f f f f f f 2 2 . 
+    . . . . . . . . . . . . . . . . 
     `, SpriteKind.Clear_settings)
 sprite_reset_settings.z = 5
+let sprite_changelogs = sprites.create(img`
+    . . . . . . . . . . . . . . . . 
+    . . . f f f f f f f f f f f . . 
+    . . . f 1 1 1 1 1 1 1 1 1 f . . 
+    . f f f 1 f f f f 1 1 1 1 f . . 
+    . f 1 f 1 f f f f 1 f f 1 f . . 
+    . f 1 f 1 f f f f 1 1 1 1 f . . 
+    . f 1 f 1 f f f f 1 f f 1 f . . 
+    . f 1 f 1 1 1 1 1 1 1 1 1 f . . 
+    . f 1 f 1 f f f f f f f 1 f . . 
+    . f 1 f 1 1 1 1 1 1 1 1 1 f . . 
+    . f 1 f 1 f f f f f f f 1 f . . 
+    . f 1 f 1 1 1 1 1 1 1 1 1 f . . 
+    . f 1 f 1 f f f f f f f 1 f . . 
+    . f 1 f 1 1 1 1 1 1 1 1 1 f . . 
+    . . f . f f f f f f f f f . . . 
+    . . . . . . . . . . . . . . . . 
+    `, SpriteKind.Info)
+sprite_changelogs.z = 5
 sprite_compass = sprites.create(img`
     . . . . f f f f f f f . . . . . 
     . . f f 1 1 1 1 1 1 1 f f . . . 
@@ -1401,8 +1436,9 @@ set_loot_tables()
 scene.setBackgroundColor(15)
 tiles.setTilemap(tilemap`level`)
 scene.cameraFollowSprite(sprite_hero)
-tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 7))
+tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 6))
 tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
+tiles.placeOnTile(sprite_changelogs, tiles.getTileLocation(4, 7))
 tiles.placeOnTile(sprite_reset_settings, tiles.getTileLocation(8, 7))
 pause(100)
 if (false) {
@@ -1422,9 +1458,11 @@ game.onUpdate(function () {
                     pause(500)
                     sprite_artifact_chest.destroy()
                     sprite_reset_settings.destroy()
+                    sprite_changelogs.destroy()
                     sprite_hero.setFlag(SpriteFlag.Invisible, false)
                     tiles.setTilemap(tilemap`level_0`)
                     tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
+                    info.setScore(20)
                     start_time = game.runtime()
                     in_game = true
                     loot_pos = tiles.getTilesByType(myTiles.tile1)[randint(0, tiles.getTilesByType(myTiles.tile1).length - 1)]
