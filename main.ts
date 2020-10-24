@@ -1028,7 +1028,7 @@ scene.onOverlapTile(SpriteKind.Player, myTiles.tile1, function (sprite, location
         if (!(got_loot)) {
             pause_enemies()
             got_loot = true
-            artifacts_obtained = [get_random_loot(), get_random_loot(), get_random_loot()]
+            artifacts_obtained = [get_random_loot(), get_random_loot(), get_random_loot(), get_random_loot()]
             tiles.setTileAt(tiles.getTileLocation(5, 2), sprites.dungeon.doorOpenNorth)
             tiles.setTileAt(tiles.getTileLocation(6, 2), sprites.dungeon.doorOpenNorth)
             game.showLongText("You found your loot box!", DialogLayout.Bottom)
@@ -1259,7 +1259,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // - Bigger dungeon! (Gotta keep expanding!)
 // - [ ] Make ghosts go through walls.
 // - Save [ ] artifacts and [✔] coins if make it.
-// - Change artifacts to official one, and use 4 of a kind.
+// - [ ] Change artifacts to official one, and [✔] use 4 of a kind.
 // 
 // TODO for 1.0:
 // 
@@ -1415,6 +1415,10 @@ sprite_compass.bottom = scene.screenHeight() - 1
 // 
 // Example:
 // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
+// 
+// Can't store as list of list of strings - maybe store as simple key: value with value as string and key format as decked_out_artifacts_array_x_y and x would be array index and y would be array index inside array index thingy?
+// 
+// See: https://forum.makecode.com/t/more-settings-questions/4056/2
 user_artifacts = [["", "", "", "", ""]]
 user_artifacts.pop()
 if (!(blockSettings.exists("decked_out_coins"))) {
@@ -1532,6 +1536,14 @@ game.onUpdate(function () {
     }
 })
 game.onUpdate(function () {
+    if (paused) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite.x = sprites.readDataNumber(sprite, "paused_x")
+            sprite.y = sprites.readDataNumber(sprite, "paused_y")
+        }
+    }
+})
+game.onUpdate(function () {
     if (in_game) {
         if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.hazardLava0) || sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.hazardLava1)) {
             if (!(sprites.readDataBoolean(sprite_hero, "on_fire"))) {
@@ -1543,14 +1555,6 @@ game.onUpdate(function () {
                 effects.clearParticles(sprite_hero)
                 sprites.setDataBoolean(sprite_hero, "on_fire", false)
             })
-        }
-    }
-})
-game.onUpdate(function () {
-    if (paused) {
-        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
-            sprite.x = sprites.readDataNumber(sprite, "paused_x")
-            sprite.y = sprites.readDataNumber(sprite, "paused_y")
         }
     }
 })
