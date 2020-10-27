@@ -525,7 +525,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Clear_settings, function (sprite
         sprite.y += -2
     }
     if (game.ask("Are you sure you want", "to reset?") && game.ask("You can't go back after", "this!")) {
-        blockSettings.remove("decked_out_coins")
+        blockSettings.clear()
         pause(100)
         game.showLongText("Done clearing data! Restarting!", DialogLayout.Bottom)
         pause(100)
@@ -859,6 +859,14 @@ function get_random_coins (max: number) {
     }
     unpause_enemies()
 }
+function save_user_artifacts_to_settings () {
+    for (let x = 0; x <= user_artifacts.length - 1; x++) {
+        for (let y = 0; y <= 4; y++) {
+            blockSettings.writeString("decked_out_artifacts_array_" + x + "_" + y, user_artifacts[x][y])
+            console.logValue("decked_out_artifacts_array_" + x + "_" + y, user_artifacts[x][y])
+        }
+    }
+}
 function count_random_coins (max: number) {
     local_coins = 0
     for (let index = 0; index <= max; index++) {
@@ -1068,6 +1076,22 @@ function get_random_loot () {
     }
     return ["", "", "", "", ""]
 }
+function load_user_artifacts_from_settings () {
+    local_stop = false
+    for (let x = 0; x <= 14; x++) {
+        local_artifact_array_contruc = []
+        for (let y = 0; y <= 4; y++) {
+            if (!(blockSettings.exists("decked_out_artifacts_array_" + x + "_" + y))) {
+                local_stop = true
+            } else {
+                local_artifact_array_contruc.push(blockSettings.readString("decked_out_artifacts_array_" + x + "_" + y))
+            }
+        }
+        if (!(local_stop)) {
+            user_artifacts.push(local_artifact_array_contruc)
+        }
+    }
+}
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
     if (in_game && !(end_game)) {
         pause_enemies()
@@ -1103,6 +1127,10 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
             for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
                 sprite.destroy()
             }
+            for (let artifact of artifacts_obtained) {
+                user_artifacts.push(artifact)
+            }
+            save_user_artifacts_to_settings()
             pause(2000)
             color.startFade(color.Black, color.originalPalette, 1000)
             color.pauseUntilFadeDone()
@@ -1258,8 +1286,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
 // - [ ] Make ghosts go through walls.
-// - Save [ ] artifacts and [✔] coins if make it.
-// - [ ] Change artifacts to official one, and [✔] use 4 of a kind.
+// - Save [ ] artifacts and [✔] coins if make it. Current problem is that artifacts aren't read properly.
+// - [ ] Keep adding more artifacts.
 // 
 // TODO for 1.0:
 // 
@@ -1273,6 +1301,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
+let local_artifact_array_contruc: string[] = []
+let local_stop = false
 let local_set = ""
 let local_rarity = ""
 let local_chance = 0
@@ -1421,6 +1451,7 @@ sprite_compass.bottom = scene.screenHeight() - 1
 // See: https://forum.makecode.com/t/more-settings-questions/4056/2
 user_artifacts = [["", "", "", "", ""]]
 user_artifacts.pop()
+load_user_artifacts_from_settings()
 if (!(blockSettings.exists("decked_out_coins"))) {
     blockSettings.writeNumber("decked_out_coins", 0)
 }
