@@ -535,7 +535,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Clear_settings, function (sprite
     }
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (info.score() > 0) {
+    if (info.score() > 0 && in_game) {
         controller.moveSprite(sprite_hero, 75, 75)
         running = true
     }
@@ -688,9 +688,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Info, function (sprite, otherSpr
         sprite.x += 2
         sprite.y += -2
     }
-    if (game.ask("Want to read the", "changelogs?")) {
-        changelogs()
-    }
+    changelogs()
 })
 function summon_snake () {
     sprite_snake = sprites.create(img`
@@ -866,6 +864,7 @@ function save_user_artifacts_to_settings () {
             console.logValue("decked_out_artifacts_array_" + x + "_" + y, user_artifacts[x][y])
         }
     }
+    blockSettings.writeNumber("decked_out_artifacts_length", user_artifacts.length)
 }
 function count_random_coins (max: number) {
     local_coins = 0
@@ -879,8 +878,10 @@ function count_random_coins (max: number) {
     return local_coins
 }
 controller.A.onEvent(ControllerButtonEvent.Released, function () {
-    controller.moveSprite(sprite_hero, 50, 50)
-    running = false
+    if (in_game) {
+        controller.moveSprite(sprite_hero, 50, 50)
+        running = false
+    }
 })
 sprites.onDestroyed(SpriteKind.Seeing, function (sprite) {
     if (sprite_hero.overlapsWith(sprite)) {
@@ -911,8 +912,10 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherS
     otherSprite.destroy()
 })
 controller.B.onEvent(ControllerButtonEvent.Released, function () {
-    controller.moveSprite(sprite_hero, 50, 50)
-    effects.clearParticles(sprite_hero)
+    if (in_game) {
+        controller.moveSprite(sprite_hero, 50, 50)
+        effects.clearParticles(sprite_hero)
+    }
 })
 function summon_bat () {
     sprite_bat = sprites.create(img`
@@ -1078,7 +1081,7 @@ function get_random_loot () {
 }
 function load_user_artifacts_from_settings () {
     local_stop = false
-    for (let x = 0; x <= 14; x++) {
+    for (let x = 0; x <= blockSettings.readNumber("decked_out_artifacts_length") - 1; x++) {
         local_artifact_array_contruc = []
         for (let y = 0; y <= 4; y++) {
             if (!(blockSettings.exists("decked_out_artifacts_array_" + x + "_" + y))) {
@@ -1092,6 +1095,9 @@ function load_user_artifacts_from_settings () {
         }
     }
 }
+blockMenu.onMenuOptionSelected(function (option, index) {
+    option_selected = true
+})
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
     if (in_game && !(end_game)) {
         pause_enemies()
@@ -1286,7 +1292,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
 // - [ ] Make ghosts go through walls.
-// - Save [ ] artifacts and [✔] coins if make it. Current problem is that artifacts aren't read properly.
+// - Automatically collect sets and increment hero score, which is displayed above you in lobby. 
 // - [ ] Keep adding more artifacts.
 // 
 // TODO for 1.0:
@@ -1320,6 +1326,8 @@ let local_degree_to_target = 0
 let local_radians_to_target = 0
 let coins_chance = 0
 let local_cookies = 0
+let option_selected = false
+let user_artifacts_simple: string[] = []
 let artifacts_obtained: string[][] = []
 let end_game = false
 let in_game = false
@@ -1478,6 +1486,34 @@ tiles.placeOnTile(sprite_reset_settings, tiles.getTileLocation(8, 7))
 pause(100)
 if (false) {
     instructions()
+}
+if (user_artifacts.length > 12) {
+    controller.moveSprite(sprite_hero, 0, 0)
+    game.showLongText("Oh no, you don't have enough space for all your artifacts! Select " + (user_artifacts.length - 12) + " artifact(s) to sacrifice.", DialogLayout.Bottom)
+    blockMenu.setColors(1, 15)
+    while (user_artifacts.length > 12) {
+        user_artifacts_simple = []
+        option_selected = false
+        for (let artifact of user_artifacts) {
+            user_artifacts_simple.push("" + artifact[0] + " - " + artifact[2])
+        }
+        blockMenu.showMenu(user_artifacts_simple, MenuStyle.Grid, MenuLocation.FullScreen)
+        while (!(option_selected)) {
+            pause(100)
+        }
+        if (game.ask("Are you sure you want", "to sacrifice it?")) {
+            game.showLongText("Farewell, artifact!", DialogLayout.Bottom)
+            user_artifacts.removeAt(blockMenu.selectedMenuIndex())
+            user_coins += 1
+            info.changeScoreBy(1)
+            game.showLongText("1 coin(s) awarded!", DialogLayout.Bottom)
+        } else {
+            game.showLongText("Choose something else!", DialogLayout.Bottom)
+        }
+    }
+    blockMenu.closeMenu()
+    save_user_artifacts_to_settings()
+    controller.moveSprite(sprite_hero, 50, 50)
 }
 game.onUpdate(function () {
     if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.doorOpenEast) && !(in_game)) {
