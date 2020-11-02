@@ -534,16 +534,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Clear_settings, function (sprite
         game.reset()
     }
 })
-controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (info.score() > 0 && in_game) {
-        controller.moveSprite(sprite_hero, 75, 75)
-        running = true
-    }
-})
-function within_range (x: number, middle: number, difference: number) {
-    return x < middle + difference && x > middle - difference
-}
-function tp_to_rand_spawner (sprite: Sprite) {
+function tp_to_random_spawner (sprite: Sprite) {
     local_random = randint(0, 3)
     if (local_random == 0) {
         tiles.placeOnRandomTile(sprite, sprites.dungeon.doorClosedNorth)
@@ -554,6 +545,15 @@ function tp_to_rand_spawner (sprite: Sprite) {
     } else {
         tiles.placeOnRandomTile(sprite, sprites.dungeon.doorClosedEast)
     }
+}
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (info.score() > 0 && in_game) {
+        controller.moveSprite(sprite_hero, 75, 75)
+        running = true
+    }
+})
+function within_range (x: number, middle: number, difference: number) {
+    return x < middle + difference && x > middle - difference
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSprite) {
     if (!(sprites.readDataBoolean(otherSprite, "opened"))) {
@@ -614,7 +614,7 @@ function summon_ghost () {
         ........................
         ........................
         `, SpriteKind.Enemy)
-    tp_to_rand_spawner(sprite_ghost)
+    tp_to_random_spawner(sprite_ghost)
     sprites.setDataBoolean(sprite_ghost, "see_player", false)
     sprites.setDataNumber(sprite_ghost, "see_cooldown", 10)
     sprites.setDataNumber(sprite_ghost, "damage_rate", 500)
@@ -709,7 +709,7 @@ function summon_snake () {
         . f 6 1 1 1 1 1 1 6 6 6 f . . . 
         . . c c c c c c c c c f . . . . 
         `, SpriteKind.Enemy)
-    tp_to_rand_spawner(sprite_snake)
+    tp_to_random_spawner(sprite_snake)
     sprites.setDataBoolean(sprite_snake, "see_player", false)
     sprites.setDataNumber(sprite_snake, "see_cooldown", 10)
     sprites.setDataNumber(sprite_snake, "damage_rate", 0)
@@ -936,7 +936,7 @@ function summon_bat () {
         . . f b b b b b b c f . . . . . 
         . . . f f f f f f f . . . . . . 
         `, SpriteKind.Enemy)
-    tp_to_rand_spawner(sprite_bat)
+    tp_to_random_spawner(sprite_bat)
     sprites.setDataBoolean(sprite_bat, "see_player", false)
     sprites.setDataNumber(sprite_bat, "see_cooldown", 10)
     sprites.setDataNumber(sprite_bat, "damage_rate", 1000)
