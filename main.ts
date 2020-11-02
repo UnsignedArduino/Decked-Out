@@ -501,10 +501,29 @@ function set_loot_tables () {
     ["Wither set - Nether Star", "Looks just like a star...", "Unique", "wither", "unique"],
     ["Ocean set - Sea Pickle", "A sea pickle that has been pickled for preservation.", "Common", "ocean", "common"],
     ["Ocean set - Sea Lantern", "Used for lighting up the Ocean Monuments.", "Uncommon", "ocean", "uncommon"],
-    ["Ocean set - Sponge", "A sponge to soak up water, found in Ocean Monuments", "Rare", "ocean", "rare"],
-    ["Ocean set - Heart of the Sea", "The coveted Heart of the Sea.", "Unique", "ocean", "unique"]
+    ["Ocean set - Sponge", "A sponge to soak up water, found in Ocean Monuments.", "Rare", "ocean", "rare"],
+    ["Ocean set - Heart of the Sea", "The coveted Heart of the Sea.", "Unique", "ocean", "unique"],
+    ["End set - End Rod", "Shiny stick!", "Common", "end", "common"],
+    ["End set - Eye of Ender", "Creepy circle thing that looks like an eye.", "Uncommon", "end", "uncommon"],
+    ["End set - Ender Chest", "Store your stuff in here and never lose it again!", "Rare", "end", "rare"],
+    ["End set - Shulker Head", "The head of a Shulker.", "Unique", "end", "unique"],
+    ["Nether set - Glowstone", "A glowing stone. Simple.", "Common", "nether", "common"],
+    ["Nether set - Shroomlight", "A natural source of light in the Nether.", "Uncommon", "nether", "uncommon"],
+    ["Nether set - Ancient Debris", "Something everyone seems to want these days...", "Rare", "nether", "rare"],
+    ["Nether set - Respawn Anchor", "Died in the Nether? Hope your Anchor was charged!", "Unique", "nether", "unique"],
+    ["Shiny set - Lapis Lazuli Block", "The Imposter of the Diamond Block.", "Common", "shiny", "common"],
+    ["Shiny set - Gold Block", "A whole block of gold. Uber heavy!", "Uncommon", "shiny", "uncommon"],
+    ["Shiny set - Emerald Block", "Villagers kill for this stuff. Seriously.", "Rare", "shiny", "rare"],
+    ["Shiny set - Diamond Block", "The real-deal stuff. Keep care of it!", "Unique", "shiny", "unique"]
     ]
-    loot_sets = ["dragon", "wither", "ocean"]
+    loot_sets = [
+    "dragon",
+    "wither",
+    "ocean",
+    "end",
+    "nether",
+    "shiny"
+    ]
     coins_chance = 50
 }
 function get_random_cookies (max: number) {
