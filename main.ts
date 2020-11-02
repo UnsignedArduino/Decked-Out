@@ -905,7 +905,7 @@ info.onLifeZero(function () {
     })
 })
 function changelogs () {
-    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.6.2 **BETA**", DialogLayout.Full)
+    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.7.0 **BETA**", DialogLayout.Full)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
@@ -1680,6 +1680,25 @@ forever(function () {
         }
     }
     pause(5000)
+})
+forever(function () {
+    if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.collectibleInsignia)) {
+        sprite_hero.startEffect(effects.halo, 1500)
+        pause(500)
+        color.startFade(color.originalPalette, color.White, 500)
+        color.pauseUntilFadeDone()
+        tiles.placeOnRandomTile(sprite_hero, sprites.dungeon.collectibleInsignia)
+        color.startFade(color.White, color.originalPalette, 500)
+        for (let tile of tiles.getTilesByType(sprites.dungeon.collectibleInsignia)) {
+            tiles.setTileAt(tile, myTiles.tile27)
+        }
+        clank += 3
+        timer.after(9000, function () {
+            for (let tile of tiles.getTilesByType(myTiles.tile27)) {
+                tiles.setTileAt(tile, sprites.dungeon.collectibleInsignia)
+            }
+        })
+    }
 })
 // From: https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
 // 
