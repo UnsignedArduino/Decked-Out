@@ -514,7 +514,19 @@ function set_loot_tables () {
     ["Shiny set - Lapis Lazuli Block", "The Imposter of the Diamond Block.", "Common", "shiny", "common"],
     ["Shiny set - Gold Block", "A whole block of gold. Uber heavy!", "Uncommon", "shiny", "uncommon"],
     ["Shiny set - Emerald Block", "Villagers kill for this stuff. Seriously.", "Rare", "shiny", "rare"],
-    ["Shiny set - Diamond Block", "The real-deal stuff. Keep care of it!", "Unique", "shiny", "unique"]
+    ["Shiny set - Diamond Block", "The real-deal stuff. Keep care of it!", "Unique", "shiny", "unique"],
+    ["Bee set - Honey Block", "A solidified cube of honey. Very sticky!", "Common", "bee", "common"],
+    ["Bee set - Honeycomb", "Direct from the beehives!", "Uncommon", "bee", "uncommon"],
+    ["Bee set - Beehive", "A hive of bees.", "Rare", "bee", "rare"],
+    ["Bee set - Angry Bee Head", "You are lucky this is just a head!", "Unique", "bee", "unique"],
+    ["Witch set - Nether Wart", "Reminds me of mushrooms...", "Common", "witch", "common"],
+    ["Witch set - Cauldron", "I don't have a clue on how that fits in the chest.", "Uncommon", "witch", "uncommon"],
+    ["Witch set - Brewing Stand", "A real brewing stand used by real witches.", "Rare", "witch", "rare"],
+    ["Witch set - Witch Head", "Ewww...they actually have warts on their noses!", "Unique", "witch", "unique"],
+    ["Enchantment set - Lapis Lazuli", "How do you pronounce the name of this stuff?!", "Common", "enchantment", "common"],
+    ["Enchantment set - Bookshelf", "Reading is good for you.", "Uncommon", "enchantment", "uncommon"],
+    ["Enchantment set - Bottle O' Enchanting", "Has liquid XP in here! Don't drop it!", "Rare", "enchantment", "rare"],
+    ["Enchantment set - Enchanting Table", "Make your tools shiny.", "Unique", "enchantment", "unique"]
     ]
     loot_sets = [
     "dragon",
@@ -522,7 +534,10 @@ function set_loot_tables () {
     "ocean",
     "end",
     "nether",
-    "shiny"
+    "shiny",
+    "bee",
+    "witch",
+    "enchantment"
     ]
     coins_chance = 50
 }
