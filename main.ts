@@ -526,7 +526,19 @@ function set_loot_tables () {
     ["Enchantment set - Lapis Lazuli", "How do you pronounce the name of this stuff?!", "Common", "enchantment", "common"],
     ["Enchantment set - Bookshelf", "Reading is good for you.", "Uncommon", "enchantment", "uncommon"],
     ["Enchantment set - Bottle O' Enchanting", "Has liquid XP in here! Don't drop it!", "Rare", "enchantment", "rare"],
-    ["Enchantment set - Enchanting Table", "Make your tools shiny.", "Unique", "enchantment", "unique"]
+    ["Enchantment set - Enchanting Table", "Make your tools shiny.", "Unique", "enchantment", "unique"],
+    ["Poison set - Rotten Flesh", "Stinky!", "Common", "poison", "common"],
+    ["Poison set - Spider Eye", "I hate spiders. So creepy.", "Uncommon", "poison", "uncommon"],
+    ["Poison set - Pufferfish", "Spikey!", "Rare", "poison", "rare"],
+    ["Poison set - Poisonous Potato", "This potato grew some spuds.", "Unique", "poison", "unique"],
+    ["Villager set - Hay Bales", "Efficient wheat storage!", "Common", "villager", "common"],
+    ["Villager set - Anvil", "Bang! Bang! Bang!", "Uncommon", "villager", "uncommon"],
+    ["Villager set - Bell", "STOP RUNNING, I JUST RUNG IT FOR FUN!", "Rare", "villager", "rare"],
+    ["Villager set - Iron Golem Head", "How in the world did you get this?!", "Unique", "villager", "unique"],
+    ["Snowman set - Stick", "Stick.", "Common", "snowman", "common"],
+    ["Snowman set - Snow Block", "Hmmm...still frozen somehow.", "Uncommon", "snowman", "common"],
+    ["Snowman set - Carrot", "Yum!", "Rare", "snowman", "rare"],
+    ["Snowman set - Snow Golem Head", "Nice model someone made and forgot about.", "Unique", "snowman", "unique"]
     ]
     loot_sets = [
     "dragon",
@@ -537,7 +549,10 @@ function set_loot_tables () {
     "shiny",
     "bee",
     "witch",
-    "enchantment"
+    "enchantment",
+    "poison",
+    "villager",
+    "snowman"
     ]
     coins_chance = 50
 }
