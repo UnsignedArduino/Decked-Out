@@ -905,7 +905,7 @@ info.onLifeZero(function () {
     })
 })
 function changelogs () {
-    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.6.1 **BETA**", DialogLayout.Full)
+    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.6.2 **BETA**", DialogLayout.Full)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
