@@ -991,7 +991,7 @@ info.onLifeZero(function () {
     })
 })
 function changelogs () {
-    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.7.1 **BETA**", DialogLayout.Full)
+    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.7.2 **BETA**", DialogLayout.Full)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
@@ -1644,6 +1644,7 @@ game.onUpdate(function () {
                     sprite_artifact_chest.destroy()
                     sprite_reset_settings.destroy()
                     sprite_changelogs.destroy()
+                    sprite_artifact_trashbin.destroy()
                     sprite_hero.setFlag(SpriteFlag.Invisible, false)
                     tiles.setTilemap(tilemap`level_0`)
                     tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
