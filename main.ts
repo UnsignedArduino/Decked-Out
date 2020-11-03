@@ -5,6 +5,7 @@ namespace SpriteKind {
     export const Compass = SpriteKind.create()
     export const Info = SpriteKind.create()
     export const Clear_settings = SpriteKind.create()
+    export const Artifact_Trashbin = SpriteKind.create()
 }
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function (sprite, location) {
     if (in_game) {
@@ -536,9 +537,29 @@ function set_loot_tables () {
     ["Villager set - Bell", "STOP RUNNING, I JUST RUNG IT FOR FUN!", "Rare", "villager", "rare"],
     ["Villager set - Iron Golem Head", "How in the world did you get this?!", "Unique", "villager", "unique"],
     ["Snowman set - Stick", "Stick.", "Common", "snowman", "common"],
-    ["Snowman set - Snow Block", "Hmmm...still frozen somehow.", "Uncommon", "snowman", "common"],
+    ["Snowman set - Snow Block", "Hmmm...still frozen somehow.", "Uncommon", "snowman", "uncommon"],
     ["Snowman set - Carrot", "Yum!", "Rare", "snowman", "rare"],
-    ["Snowman set - Snow Golem Head", "Nice model someone made and forgot about.", "Unique", "snowman", "unique"]
+    ["Snowman set - Snow Golem Head", "Nice model someone made and forgot about.", "Unique", "snowman", "unique"],
+    ["Baking set - Bread", "Fresh from the oven!", "Common", "baking", "common"],
+    ["Baking set - Furnace", "The oven in \"Fresh from the oven!\"", "Uncommon", "baking", "uncommon"],
+    ["Baking set - Cocoa Beans", "In reality, they are really bitter by themselves.", "Rare", "baking", "rare"],
+    ["Baking set - Pumpkin Pie", "I LOVE PUMPKIN PIE.", "Unique", "baking", "unique"],
+    ["Desert set - Chiseled Sandstone", "Sandy.", "Common", "desert", "common"],
+    ["Desert set - Cactus", "Very pointy.", "Uncommon", "desert", "uncommon"],
+    ["Desert set - Dead Bush", "Dead as a, well, dead bush.", "Rare", "desert", "rare"],
+    ["Desert set - Husk Head", "Hmmm...I wonder what mob it came from? (Hint: It's Husk)", "Unique", "desert", "unique"],
+    ["Boomer set - Gunpowder", "Very...powdery...", "Common", "boomer", "common"],
+    ["Boomer set - Rocket", "This looks fun to play with!", "Uncommon", "boomer", "uncommon"],
+    ["Boomer set - TNT", "Actually called trinitrotoluene or something like that.", "Rare", "boomer", "rare"],
+    ["Boomer set - Boomer Map", "The infamous Boomer's logo on a map!", "Unique", "boomer", "unique"],
+    ["Jungle set - Bamboo", "Grows very fast.", "Common", "jungle", "common"],
+    ["Jungle set - Vines", "This stuff spreads everywhere!", "Uncommon", "jungle", "uncommon"],
+    ["Jungle set - Melon", "Watermelons are the best fruit. Period.", "Rare", "jungle", "rare"],
+    ["Jungle set - Parrot Head", "At least it isn't the Pesky Bird's head.", "Unique", "jungle", "unique"],
+    ["Poultry set - Feather", "Does it tickle for you?", "Common", "poultry", "common"],
+    ["Poultry set - Egg", "Scrambled eggs taste good.", "Uncommon", "poultry", "uncommon"],
+    ["Poultry set - Cooked Chicken", "Restores 3 meat stick things.", "Rare", "poultry", "rare"],
+    ["Poultry set - Chicken Head", "Awww...so cute!", "Unique", "poultry", "unique"]
     ]
     loot_sets = [
     "dragon",
@@ -552,7 +573,12 @@ function set_loot_tables () {
     "enchantment",
     "poison",
     "villager",
-    "snowman"
+    "snowman",
+    "baking",
+    "desert",
+    "boomer",
+    "jungle",
+    "poultry"
     ]
     coins_chance = 50
 }
@@ -926,6 +952,17 @@ function count_random_coins (max: number) {
     }
     return local_coins
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Artifact_Trashbin, function (sprite, otherSprite) {
+    while (sprite.overlapsWith(otherSprite)) {
+        sprite.x += -2
+        sprite.y += 2
+    }
+    if (game.ask("Would you like to", "recycle an artifact?")) {
+        remove_artifact(true)
+        save_user_artifacts_to_settings()
+        blockMenu.closeMenu()
+    }
+})
 controller.A.onEvent(ControllerButtonEvent.Released, function () {
     if (in_game) {
         controller.moveSprite(sprite_hero, 50, 50)
@@ -954,7 +991,7 @@ info.onLifeZero(function () {
     })
 })
 function changelogs () {
-    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.7.0 **BETA**", DialogLayout.Full)
+    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.7.1 **BETA**", DialogLayout.Full)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
@@ -1145,7 +1182,7 @@ function load_user_artifacts_from_settings () {
     }
 }
 blockMenu.onMenuOptionSelected(function (option, index) {
-    option_selected = true
+    local_option_selected = true
 })
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
     if (in_game && !(end_game)) {
@@ -1337,12 +1374,41 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
         }
     }
 })
+function remove_artifact (cancellable: boolean) {
+    local_user_artifacts_simple = []
+    local_option_selected = false
+    controller.moveSprite(sprite_hero, 0, 0)
+    for (let artifact of user_artifacts) {
+        local_user_artifacts_simple.push("" + artifact[0] + " - " + artifact[2])
+    }
+    if (cancellable) {
+        local_user_artifacts_simple.push("Cancel")
+    }
+    blockMenu.showMenu(local_user_artifacts_simple, MenuStyle.Grid, MenuLocation.FullScreen)
+    while (!(local_option_selected)) {
+        pause(100)
+    }
+    if (blockMenu.selectedMenuOption() == "Cancel") {
+        game.showLongText("Canceled!", DialogLayout.Bottom)
+        controller.moveSprite(sprite_hero, 50, 50)
+        return
+    }
+    if (game.ask("Are you sure you want", "to sacrifice it?")) {
+        game.showLongText("Farewell, artifact!", DialogLayout.Bottom)
+        user_artifacts.removeAt(blockMenu.selectedMenuIndex())
+        user_coins += 1
+        info.changeScoreBy(1)
+        game.showLongText("1 coin(s) awarded!", DialogLayout.Bottom)
+    } else {
+        game.showLongText("Canceled!", DialogLayout.Bottom)
+    }
+    controller.moveSprite(sprite_hero, 50, 50)
+}
 // TODO:
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
 // - [ ] Make ghosts go through walls.
-// - Automatically collect sets and increment hero score, which is displayed above you in lobby. 
-// - [ ] Keep adding more artifacts.
+// - [ ] Automatically collect sets and increment hero score, which is displayed above you in lobby. 
 // 
 // TODO for 1.0:
 // 
@@ -1350,12 +1416,12 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 // - Hide seeing sprites
 // - Enable text explanation at start
 // - Enable damage
-// - Changelogs sprite (like chest) in lobby post 1.0
 // - Starting melody would be cool
-// - Able to walk through monster spawners but cost 3-5 health and teleports to other random spawner. Says "These are black holes. You can go through them, but it hurts! Try?"
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
+let local_user_artifacts_simple: string[] = []
+let local_option_selected = false
 let local_artifact_array_contruc: string[] = []
 let local_stop = false
 let local_set = ""
@@ -1375,8 +1441,6 @@ let local_degree_to_target = 0
 let local_radians_to_target = 0
 let coins_chance = 0
 let local_cookies = 0
-let option_selected = false
-let user_artifacts_simple: string[] = []
 let artifacts_obtained: string[][] = []
 let end_game = false
 let in_game = false
@@ -1471,6 +1535,25 @@ let sprite_changelogs = sprites.create(img`
     . . . . . . . . . . . . . . . . 
     `, SpriteKind.Info)
 sprite_changelogs.z = 5
+let sprite_artifact_trashbin = sprites.create(img`
+    . . . . . . . . . . . . . . . . 
+    . . . . . . . . . . . . . . . . 
+    . f f f f f f f f f f f f f f . 
+    . . f 1 1 1 1 1 1 1 1 1 1 f . . 
+    . . f 1 1 1 1 9 9 1 1 1 1 f . . 
+    . . f 1 1 1 9 1 1 9 1 1 1 f . . 
+    . . f 1 1 1 1 1 1 1 1 1 1 f . . 
+    . . . f 1 9 1 1 1 1 9 1 f . . . 
+    . . . f 1 9 1 1 1 1 9 1 f . . . 
+    . . . f 1 1 9 1 9 9 1 1 f . . . 
+    . . . f 1 1 1 1 1 1 1 1 f . . . 
+    . . . . f 1 1 1 1 1 1 f . . . . 
+    . . . . f 1 1 1 1 1 1 f . . . . 
+    . . . . f 1 1 1 1 1 1 f . . . . 
+    . . . . f f f f f f f f . . . . 
+    . . . . . . . . . . . . . . . . 
+    `, SpriteKind.Artifact_Trashbin)
+sprite_artifact_trashbin.z = 5
 sprite_compass = sprites.create(img`
     . . . . f f f f f f f . . . . . 
     . . f f 1 1 1 1 1 1 1 f f . . . 
@@ -1525,6 +1608,7 @@ let clank = 5
 let clank_multiplier = 1
 artifacts_obtained = []
 set_loot_tables()
+blockMenu.setColors(1, 15)
 scene.setBackgroundColor(15)
 tiles.setTilemap(tilemap`level`)
 scene.cameraFollowSprite(sprite_hero)
@@ -1532,37 +1616,18 @@ tiles.placeOnTile(sprite_hero, tiles.getTileLocation(6, 6))
 tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
 tiles.placeOnTile(sprite_changelogs, tiles.getTileLocation(4, 7))
 tiles.placeOnTile(sprite_reset_settings, tiles.getTileLocation(8, 7))
+tiles.placeOnTile(sprite_artifact_trashbin, tiles.getTileLocation(8, 4))
 pause(100)
 if (false) {
     instructions()
 }
 if (user_artifacts.length > 12) {
-    controller.moveSprite(sprite_hero, 0, 0)
     game.showLongText("Oh no, you don't have enough space for all your artifacts! Select " + (user_artifacts.length - 12) + " artifact(s) to sacrifice.", DialogLayout.Bottom)
-    blockMenu.setColors(1, 15)
     while (user_artifacts.length > 12) {
-        user_artifacts_simple = []
-        option_selected = false
-        for (let artifact of user_artifacts) {
-            user_artifacts_simple.push("" + artifact[0] + " - " + artifact[2])
-        }
-        blockMenu.showMenu(user_artifacts_simple, MenuStyle.Grid, MenuLocation.FullScreen)
-        while (!(option_selected)) {
-            pause(100)
-        }
-        if (game.ask("Are you sure you want", "to sacrifice it?")) {
-            game.showLongText("Farewell, artifact!", DialogLayout.Bottom)
-            user_artifacts.removeAt(blockMenu.selectedMenuIndex())
-            user_coins += 1
-            info.changeScoreBy(1)
-            game.showLongText("1 coin(s) awarded!", DialogLayout.Bottom)
-        } else {
-            game.showLongText("Choose something else!", DialogLayout.Bottom)
-        }
+        remove_artifact(false)
     }
     blockMenu.closeMenu()
     save_user_artifacts_to_settings()
-    controller.moveSprite(sprite_hero, 50, 50)
 }
 game.onUpdate(function () {
     if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.doorOpenEast) && !(in_game)) {
