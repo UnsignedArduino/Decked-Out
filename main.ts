@@ -6,6 +6,7 @@ namespace SpriteKind {
     export const Info = SpriteKind.create()
     export const Clear_settings = SpriteKind.create()
     export const Artifact_Trashbin = SpriteKind.create()
+    export const Artifact_Submit = SpriteKind.create()
 }
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorLockedNorth, function (sprite, location) {
     if (in_game) {
@@ -630,6 +631,73 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
 function within_range (x: number, middle: number, difference: number) {
     return x < middle + difference && x > middle - difference
 }
+function submit_set () {
+    local_user_artifacts_simple = []
+    local_user_artifacts_submitting = []
+    controller.moveSprite(sprite_hero, 0, 0)
+    for (let artifact of user_artifacts) {
+        local_user_artifacts_simple.push("" + artifact[0] + " - " + artifact[2])
+    }
+    local_user_artifacts_simple.push("Cancel")
+    while (local_user_artifacts_submitting.length < 4) {
+        local_option_selected = false
+        blockMenu.showMenu(local_user_artifacts_simple, MenuStyle.Grid, MenuLocation.FullScreen)
+        while (!(local_option_selected)) {
+            pause(100)
+        }
+        if (blockMenu.selectedMenuOption() == "Cancel") {
+            game.showLongText("Canceled!", DialogLayout.Bottom)
+            controller.moveSprite(sprite_hero, 50, 50)
+            return
+        }
+        if (!(local_user_artifacts_simple[blockMenu.selectedMenuIndex()].includes("[SUBMITTED] "))) {
+            local_user_artifacts_simple[blockMenu.selectedMenuIndex()] = "[SUBMITTED] " + local_user_artifacts_simple[blockMenu.selectedMenuIndex()] + "" + "" + ""
+            local_user_artifacts_submitting.push(blockMenu.selectedMenuIndex())
+        } else {
+            local_user_artifacts_simple[blockMenu.selectedMenuIndex()] = local_user_artifacts_simple[blockMenu.selectedMenuIndex()].substr(12, local_user_artifacts_simple[blockMenu.selectedMenuIndex()].length - 12)
+            local_user_artifacts_submitting.removeAt(local_user_artifacts_submitting.indexOf(blockMenu.selectedMenuIndex()))
+        }
+    }
+    blockMenu.closeMenu()
+    local_all_same_type = true
+    local_first_type = user_artifacts[local_user_artifacts_submitting[0]][3]
+    for (let index of local_user_artifacts_submitting) {
+        if (user_artifacts[index][3] != local_first_type) {
+            local_all_same_type = false
+        }
+    }
+    if (local_all_same_type) {
+        game.showLongText("Hmmm...they are all the same type...", DialogLayout.Bottom)
+    } else {
+        game.showLongText("They aren't even from the same set! You're wasting my time! I DO have other things to do, you know!", DialogLayout.Bottom)
+        controller.moveSprite(sprite_hero, 50, 50)
+        return
+    }
+    local_submitted_rarities = [""]
+    controller.moveSprite(sprite_hero, 50, 50)
+    for (let index of local_user_artifacts_submitting) {
+        local_submitted_rarities.push(user_artifacts[index][4])
+    }
+    local_rarity_findings = [local_submitted_rarities.indexOf("common"), local_submitted_rarities.indexOf("uncommon"), local_submitted_rarities.indexOf("rare"), local_submitted_rarities.indexOf("unique")]
+    for (let index of local_rarity_findings) {
+        if (index == -1) {
+            game.showLongText("...but you don't have all of them! You're wasting my precious time!", DialogLayout.Bottom)
+            controller.moveSprite(sprite_hero, 50, 50)
+            return
+        }
+    }
+    game.showLongText("...and you have all of them! Congratulations!", DialogLayout.Bottom)
+    local_user_artifacts_copy = []
+    for (let artifact of user_artifacts) {
+        local_user_artifacts_copy.push(artifact)
+    }
+    for (let index of local_user_artifacts_submitting) {
+        user_artifacts.removeAt(user_artifacts.indexOf(local_user_artifacts_copy[index]))
+    }
+    game.showLongText("10 coins awarded!", DialogLayout.Bottom)
+    info.changeScoreBy(10)
+    controller.moveSprite(sprite_hero, 50, 50)
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSprite) {
     if (!(sprites.readDataBoolean(otherSprite, "opened"))) {
         pause(100)
@@ -917,6 +985,18 @@ function summon_snake () {
     character.rule(Predicate.FacingRight, Predicate.NotMoving)
     )
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Artifact_Submit, function (sprite, otherSprite) {
+    while (sprite.overlapsWith(otherSprite)) {
+        sprite.y += 2
+    }
+    game.showLongText("Welcome to the drawer! You can submit your artifacts here to increment your Hero Score, which you can brag about!", DialogLayout.Bottom)
+    game.showLongText("Just don't reach down too far. I'm not sure what's down their.", DialogLayout.Bottom)
+    if (game.ask("Would you like to", "submit a set?")) {
+        submit_set()
+        save_user_artifacts_to_settings()
+        blockSettings.writeNumber("decked_out_coins", info.score())
+    }
+})
 info.onCountdownEnd(function () {
 	
 })
@@ -991,7 +1071,7 @@ info.onLifeZero(function () {
     })
 })
 function changelogs () {
-    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.7.2 **BETA**", DialogLayout.Full)
+    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.8 **BETA**", DialogLayout.Full)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
@@ -1408,7 +1488,7 @@ function remove_artifact (cancellable: boolean) {
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
 // - [ ] Make ghosts go through walls.
-// - [ ] Automatically collect sets and increment hero score, which is displayed above you in lobby. 
+// - [ ] Work on submit_set function and increment hero score, which is displayed above you in lobby. 
 // 
 // TODO for 1.0:
 // 
@@ -1420,8 +1500,6 @@ function remove_artifact (cancellable: boolean) {
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
-let local_user_artifacts_simple: string[] = []
-let local_option_selected = false
 let local_artifact_array_contruc: string[] = []
 let local_stop = false
 let local_set = ""
@@ -1433,6 +1511,14 @@ let local_coins = 0
 let local_coins_got = 0
 let sprite_snake: Sprite = null
 let sprite_ghost: Sprite = null
+let local_user_artifacts_copy: string[][] = []
+let local_rarity_findings: number[] = []
+let local_submitted_rarities: string[] = []
+let local_first_type = ""
+let local_all_same_type = false
+let local_option_selected = false
+let local_user_artifacts_submitting: number[] = []
+let local_user_artifacts_simple: string[] = []
 let local_random = 0
 let local_cookies_got = 0
 let loot_sets: string[] = []
@@ -1554,6 +1640,33 @@ let sprite_artifact_trashbin = sprites.create(img`
     . . . . . . . . . . . . . . . . 
     `, SpriteKind.Artifact_Trashbin)
 sprite_artifact_trashbin.z = 5
+let sprite_artifact_submit = sprites.create(img`
+    ................
+    ..777777777777..
+    .77777777777777.
+    .77777777777777.
+    .77777777777777.
+    .77777777777777.
+    .77777777777777.
+    .77777777777777.
+    .76666666666667.
+    .66666666666666.
+    .67777777777776.
+    .6c666c66c666c6.
+    .6c666cddc666c6.
+    .6c6666cc6666c6.
+    .6cccccccccccc6.
+    .66666666666666.
+    .67777777777776.
+    .6c666c66c666c6.
+    .6c666cddc666c6.
+    .6c6666cc6666c6.
+    .6cccccccccccc6.
+    .66666666666666.
+    .6............6.
+    ................
+    `, SpriteKind.Artifact_Submit)
+sprite_artifact_submit.z = 5
 sprite_compass = sprites.create(img`
     . . . . f f f f f f f . . . . . 
     . . f f 1 1 1 1 1 1 1 f f . . . 
@@ -1576,24 +1689,51 @@ sprite_compass.setFlag(SpriteFlag.RelativeToCamera, true)
 sprite_compass.setFlag(SpriteFlag.Invisible, true)
 sprite_compass.left = 2
 sprite_compass.bottom = scene.screenHeight() - 1
-// Format:
-// 0: Name
-// 1: Description
-// 2: Rarity
-// 3: Set (for tracking)
-// 4: Rarity (for tracking)
-// 
-// Example:
-// ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
-// 
-// Can't store as list of list of strings - maybe store as simple key: value with value as string and key format as decked_out_artifacts_array_x_y and x would be array index and y would be array index inside array index thingy?
-// 
-// See: https://forum.makecode.com/t/more-settings-questions/4056/2
-user_artifacts = [["", "", "", "", ""]]
-user_artifacts.pop()
-load_user_artifacts_from_settings()
+if (true) {
+    // Format:
+    // 0: Name
+    // 1: Description
+    // 2: Rarity
+    // 3: Set (for tracking)
+    // 4: Rarity (for tracking)
+    // 
+    // Example:
+    // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
+    // 
+    // Can't store as list of list of strings - maybe store as simple key: value with value as string and key format as decked_out_artifacts_array_x_y and x would be array index and y would be array index inside array index thingy?
+    // 
+    // See: https://forum.makecode.com/t/more-settings-questions/4056/2
+    user_artifacts = [["", "", "", "", ""]]
+    user_artifacts.pop()
+    load_user_artifacts_from_settings()
+} else {
+    // Format:
+    // 0: Name
+    // 1: Description
+    // 2: Rarity
+    // 3: Set (for tracking)
+    // 4: Rarity (for tracking)
+    // 
+    // Example:
+    // ["Red Toy Car", "A red toy car, fun to play with!", "Common", "car", "common"]
+    // 
+    // Can't store as list of list of strings - maybe store as simple key: value with value as string and key format as decked_out_artifacts_array_x_y and x would be array index and y would be array index inside array index thingy?
+    // 
+    // See: https://forum.makecode.com/t/more-settings-questions/4056/2
+    user_artifacts = [
+    ["Test - A", "A.", "Unique", "letters", "unique"],
+    ["Test - B", "B.", "Rare", "letters", "rare"],
+    ["Test - C", "C.", "Uncommon", "letters", "uncommon"],
+    ["Test - D", "D.", "Common", "letters", "common"],
+    ["Test - 1", "1.", "Unique", "numbers", "unique"],
+    ["Test - 2", "2.", "Rare", "numbers", "rare"]
+    ]
+}
 if (!(blockSettings.exists("decked_out_coins"))) {
     blockSettings.writeNumber("decked_out_coins", 0)
+}
+if (!(blockSettings.exists("decked_out_hero_score"))) {
+    blockSettings.writeNumber("decked_out_hero_score", 0)
 }
 user_coins = 0
 user_cookies = 0
@@ -1617,6 +1757,7 @@ tiles.placeOnTile(sprite_artifact_chest, tiles.getTileLocation(4, 4))
 tiles.placeOnTile(sprite_changelogs, tiles.getTileLocation(4, 7))
 tiles.placeOnTile(sprite_reset_settings, tiles.getTileLocation(8, 7))
 tiles.placeOnTile(sprite_artifact_trashbin, tiles.getTileLocation(8, 4))
+tiles.placeOnTile(sprite_artifact_submit, tiles.getTileLocation(6, 4))
 pause(100)
 if (false) {
     instructions()
@@ -1645,6 +1786,7 @@ game.onUpdate(function () {
                     sprite_reset_settings.destroy()
                     sprite_changelogs.destroy()
                     sprite_artifact_trashbin.destroy()
+                    sprite_artifact_submit.destroy()
                     sprite_hero.setFlag(SpriteFlag.Invisible, false)
                     tiles.setTilemap(tilemap`level_0`)
                     tiles.placeOnTile(sprite_hero, tiles.getTileLocation(5, 5))
