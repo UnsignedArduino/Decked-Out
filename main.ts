@@ -696,6 +696,12 @@ function submit_set () {
     }
     game.showLongText("10 coins awarded!", DialogLayout.Bottom)
     info.changeScoreBy(10)
+    game.showLongText("Hero Score increased!", DialogLayout.Bottom)
+    user_hero_score += 1
+    timer.after(500, function () {
+        effects.confetti.startScreenEffect(1000)
+        music.powerUp.play()
+    })
     controller.moveSprite(sprite_hero, 50, 50)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Chest, function (sprite, otherSprite) {
@@ -995,6 +1001,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Artifact_Submit, function (sprit
         submit_set()
         save_user_artifacts_to_settings()
         blockSettings.writeNumber("decked_out_coins", info.score())
+        blockSettings.writeNumber("decked_out_hero_score", user_hero_score)
     }
 })
 info.onCountdownEnd(function () {
@@ -1533,6 +1540,7 @@ let in_game = false
 let paused = false
 let running = false
 let got_loot = false
+let user_hero_score = 0
 let user_cookies = 0
 let user_coins = 0
 let user_artifacts: string[][] = []
@@ -1689,7 +1697,7 @@ sprite_compass.setFlag(SpriteFlag.RelativeToCamera, true)
 sprite_compass.setFlag(SpriteFlag.Invisible, true)
 sprite_compass.left = 2
 sprite_compass.bottom = scene.screenHeight() - 1
-if (true) {
+if (false) {
     // Format:
     // 0: Name
     // 1: Description
@@ -1737,6 +1745,7 @@ if (!(blockSettings.exists("decked_out_hero_score"))) {
 }
 user_coins = 0
 user_cookies = 0
+user_hero_score = blockSettings.readNumber("decked_out_hero_score")
 info.setScore(blockSettings.readNumber("decked_out_coins"))
 info.setLife(20)
 got_loot = false
@@ -2069,6 +2078,12 @@ forever(function () {
         update_compass(tiles.locationXY(tiles.locationOfSprite(sprite_hero), tiles.XY.column), tiles.locationXY(tiles.locationOfSprite(sprite_hero), tiles.XY.row), tiles.locationXY(loot_pos, tiles.XY.column), tiles.locationXY(loot_pos, tiles.XY.row))
     }
     pause(100)
+})
+forever(function () {
+    if (!(in_game)) {
+        sprite_hero.say(user_hero_score)
+    }
+    pause(1000)
 })
 game.onUpdateInterval(500, function () {
     if (in_game) {
