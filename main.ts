@@ -25,7 +25,7 @@ function instructions () {
     game.showLongText("Welcome to a horrible clone of TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
     game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
     game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or food!", DialogLayout.Bottom)
-    game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager) " + "They will be patrolling the dungeon, " + "and if they get hold of you, you'll die!" + "", DialogLayout.Bottom)
+    game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager) " + "They will be patrolling the dungeon, " + "and if they get ahold of you, you'll die!" + "", DialogLayout.Bottom)
     game.showLongText("The longer you stay in the dungeon, " + "the more clank you will generate. " + "This will awaken bats and ghost, " + "(which can fly through walls) " + "which won't be good!", DialogLayout.Bottom)
     game.showLongText("When you are ready to enter, head through the doors on the right.", DialogLayout.Bottom)
     game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
@@ -647,6 +647,7 @@ function submit_set () {
         }
         if (blockMenu.selectedMenuOption() == "Cancel") {
             game.showLongText("Canceled!", DialogLayout.Bottom)
+            blockMenu.closeMenu()
             controller.moveSprite(sprite_hero, 50, 50)
             return
         }
@@ -1078,7 +1079,7 @@ info.onLifeZero(function () {
     })
 })
 function changelogs () {
-    game.showLongText("Changelogs:\\n" + "We're still in BETA, so I'm too lazy to write any.\\n" + ":)\\n" + "Once we are stable-ish, I'll try to remember to write changelogs.\\n" + "Current version is 0.8 **BETA**", DialogLayout.Full)
+    game.showLongText("Changelogs for v1.0.0:\\n" + "Oh wow, I made it to 1.0. How surprising. " + "But since its not Beta anymore, I have to write changelogs from this point on. " + "Dang, I'm too lazy for this kind of stuff. " + "", DialogLayout.Full)
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Seeing, function (sprite, otherSprite) {
     scene.followPath(sprites.readDataSprite(otherSprite, "saw_from"), scene.aStar(tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from")), tiles.locationOfSprite(sprites.readDataSprite(otherSprite, "saw_from"))), 0)
@@ -1318,7 +1319,7 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (
     }
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    if (false) {
+    if (true) {
         timer.throttle(sprites.readDataString(otherSprite, "species"), sprites.readDataNumber(otherSprite, "damage_rate"), function () {
             info.changeLifeBy(sprites.readDataNumber(otherSprite, "damage"))
         })
@@ -1495,7 +1496,7 @@ function remove_artifact (cancellable: boolean) {
 // 
 // - Bigger dungeon! (Gotta keep expanding!)
 // - [ ] Make ghosts go through walls.
-// - [ ] Work on submit_set function and increment hero score, which is displayed above you in lobby. 
+// - [ ] Starting melody would be cool
 // 
 // TODO for 1.0:
 // 
@@ -1503,7 +1504,6 @@ function remove_artifact (cancellable: boolean) {
 // - Hide seeing sprites
 // - Enable text explanation at start
 // - Enable damage
-// - Starting melody would be cool
 let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
 let start_time = 0
@@ -1697,7 +1697,7 @@ sprite_compass.setFlag(SpriteFlag.RelativeToCamera, true)
 sprite_compass.setFlag(SpriteFlag.Invisible, true)
 sprite_compass.left = 2
 sprite_compass.bottom = scene.screenHeight() - 1
-if (false) {
+if (true) {
     // Format:
     // 0: Name
     // 1: Description
@@ -1768,7 +1768,7 @@ tiles.placeOnTile(sprite_reset_settings, tiles.getTileLocation(8, 7))
 tiles.placeOnTile(sprite_artifact_trashbin, tiles.getTileLocation(8, 4))
 tiles.placeOnTile(sprite_artifact_submit, tiles.getTileLocation(6, 4))
 pause(100)
-if (false) {
+if (true) {
     instructions()
 }
 if (user_artifacts.length > 12) {
@@ -1808,6 +1808,11 @@ game.onUpdate(function () {
                     }
                     pause(500)
                     controller.moveSprite(sprite_hero, 50, 50)
+                    timer.background(function () {
+                        for (let index = 0; index < 2; index++) {
+                            music.playMelody(music.convertRTTTLToMelody(""), 500)
+                        }
+                    })
                     color.startFade(color.Black, color.originalPalette, 1000)
                     color.pauseUntilFadeDone()
                 })
@@ -1930,6 +1935,11 @@ game.onUpdateInterval(2000, function () {
         if (Math.percentChance(clank * clank_multiplier)) {
             clank += 1
         }
+    }
+})
+forever(function () {
+    if (false) {
+        music.playMelody(music.convertRTTTLToMelody("SunkenShip: d=8,o=3,b=120: 8c2, 4p, 4F#3, 8G3, 4p, 8c2, 4p, 4G3, 8F#3, 4p"), 40)
     }
 })
 forever(function () {
@@ -2102,7 +2112,7 @@ game.onUpdateInterval(200, function () {
             sprite_seeing = sprites.createProjectileFromSprite(img`
                 3 
                 `, sprite, (sprite_hero.x - sprite.x) * 10, (sprite_hero.y - sprite.y) * 10)
-            sprite_seeing.setFlag(SpriteFlag.Invisible, false)
+            sprite_seeing.setFlag(SpriteFlag.Invisible, true)
             sprite_seeing.setFlag(SpriteFlag.DestroyOnWall, true)
             sprite_seeing.setFlag(SpriteFlag.AutoDestroy, true)
             sprites.setDataSprite(sprite_seeing, "saw_from", sprite)
