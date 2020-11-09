@@ -22,13 +22,15 @@ function unpause_enemies () {
     paused = false
 }
 function instructions () {
-    game.showLongText("Welcome to a horrible clone of TangoTek's Decked Out from HermitCraft, now on MakeCode Arcade!", DialogLayout.Bottom)
-    game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
-    game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or food!", DialogLayout.Bottom)
-    game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager) " + "They will be patrolling the dungeon, " + "and if they get ahold of you, you'll die!" + "", DialogLayout.Bottom)
-    game.showLongText("The longer you stay in the dungeon, " + "the more clank you will generate. " + "This will awaken bats and ghost, " + "(which can fly through walls) " + "which won't be good!", DialogLayout.Bottom)
-    game.showLongText("When you are ready to enter, head through the doors on the right.", DialogLayout.Bottom)
-    game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+    game.showLongText("Welcome to a horrible clone of TangoTek's " + "Decked Out from HermitCraft, " + "now on MakeCode Arcade!\\n" + "(Hold down [B] to skip when pressing [A])" + "", DialogLayout.Bottom)
+    if (!(controller.B.isPressed())) {
+        game.showLongText("Your goal is to follow the compass and try to find your treasure, hidden in the dungeon!", DialogLayout.Bottom)
+        game.showLongText("Along the way, there will be chests filled with smaller loot, such as coins or food!", DialogLayout.Bottom)
+        game.showLongText("You will definitely want to avoid the snakes." + "(Yeah, I was too lazy to draw a Ravager) " + "They will be patrolling the dungeon, " + "and if they get ahold of you, you'll die!" + "", DialogLayout.Bottom)
+        game.showLongText("The longer you stay in the dungeon, " + "the more clank you will generate. " + "This will awaken bats and ghost, " + "(which can fly through walls) " + "which won't be good!", DialogLayout.Bottom)
+        game.showLongText("When you are ready to enter, head through the doors on the right.", DialogLayout.Bottom)
+        game.showLongText("Good luck! You'll need it...", DialogLayout.Bottom)
+    }
 }
 function count_random_cookies (max: number) {
     local_cookies = 0
@@ -1504,8 +1506,8 @@ function remove_artifact (cancellable: boolean) {
 // - Hide seeing sprites
 // - Enable text explanation at start
 // - Enable damage
-let end_location: tiles.Location = null
 let sprite_seeing: Sprite = null
+let end_location: tiles.Location = null
 let start_time = 0
 let local_artifact_array_contruc: string[] = []
 let local_stop = false
@@ -1780,6 +1782,55 @@ if (user_artifacts.length > 12) {
     save_user_artifacts_to_settings()
 }
 game.onUpdate(function () {
+    if (in_game || end_game) {
+        info.startCountdown((game.runtime() - start_time) / 1000)
+    }
+})
+game.onUpdate(function () {
+    if (paused) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite.x = sprites.readDataNumber(sprite, "paused_x")
+            sprite.y = sprites.readDataNumber(sprite, "paused_y")
+        }
+    }
+})
+game.onUpdateInterval(5000, function () {
+    control.heapSnapshot()
+})
+game.onUpdateInterval(2000, function () {
+    if (in_game) {
+        if (!(running) && info.score() < 20) {
+            info.changeScoreBy(1)
+        }
+        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
+            timer.after(1000, function () {
+                if (info.score() < 20) {
+                    info.changeScoreBy(1)
+                }
+            })
+        }
+    }
+})
+game.onUpdateInterval(2000, function () {
+    if (in_game && true) {
+        sprite_hero.say(clank)
+    }
+    if (in_game && !(paused)) {
+        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
+            clank_multiplier = 1
+        } else {
+            if (running) {
+                clank_multiplier = 2
+            } else {
+                clank_multiplier = 4
+            }
+        }
+        if (Math.percentChance(clank * clank_multiplier)) {
+            clank += 1
+        }
+    }
+})
+forever(function () {
     if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.doorOpenEast) && !(in_game)) {
         timer.throttle("enter_dungeon", 500, function () {
             if (game.ask("Are you sure you want to", "enter the dungoen?")) {
@@ -1808,11 +1859,6 @@ game.onUpdate(function () {
                     }
                     pause(500)
                     controller.moveSprite(sprite_hero, 50, 50)
-                    timer.background(function () {
-                        for (let index = 0; index < 2; index++) {
-                            music.playMelody(music.convertRTTTLToMelody(""), 500)
-                        }
-                    })
                     color.startFade(color.Black, color.originalPalette, 1000)
                     color.pauseUntilFadeDone()
                 })
@@ -1822,7 +1868,33 @@ game.onUpdate(function () {
         })
     }
 })
-game.onUpdate(function () {
+forever(function () {
+    if (in_game) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            if (!(scene.spriteIsFollowingPath(sprite)) && !(sprites.readDataBoolean(sprite, "see_player"))) {
+                end_location = tiles.getTilesByType(sprites.dungeon.darkGroundCenter)[randint(0, tiles.getTilesByType(sprites.dungeon.darkGroundCenter).length - 1)]
+                scene.followPath(sprite, scene.aStar(tiles.locationOfSprite(sprite), end_location), 25)
+            }
+        }
+    }
+    pause(10000)
+})
+forever(function () {
+    if (in_game) {
+        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
+            sprite_seeing = sprites.createProjectileFromSprite(img`
+                3 
+                `, sprite, (sprite_hero.x - sprite.x) * 10, (sprite_hero.y - sprite.y) * 10)
+            sprite_seeing.setFlag(SpriteFlag.Invisible, true)
+            sprite_seeing.setFlag(SpriteFlag.DestroyOnWall, true)
+            sprite_seeing.setFlag(SpriteFlag.AutoDestroy, true)
+            sprites.setDataSprite(sprite_seeing, "saw_from", sprite)
+            sprite_seeing.setKind(SpriteKind.Seeing)
+        }
+    }
+    pause(200)
+})
+forever(function () {
     if (!(sprite_hero.overlapsWith(sprite_artifact_chest))) {
         if (sprites.readDataBoolean(sprite_artifact_chest, "opened")) {
             sprites.setDataBoolean(sprite_artifact_chest, "opened", false)
@@ -1867,21 +1939,9 @@ game.onUpdate(function () {
             . b b . . . . . . . . . . b b . 
             `)
     }
+    pause(100)
 })
-game.onUpdate(function () {
-    if (in_game || end_game) {
-        info.startCountdown((game.runtime() - start_time) / 1000)
-    }
-})
-game.onUpdate(function () {
-    if (paused) {
-        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
-            sprite.x = sprites.readDataNumber(sprite, "paused_x")
-            sprite.y = sprites.readDataNumber(sprite, "paused_y")
-        }
-    }
-})
-game.onUpdate(function () {
+forever(function () {
     if (in_game) {
         if (sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.hazardLava0) || sprite_hero.tileKindAt(TileDirection.Center, sprites.dungeon.hazardLava1)) {
             if (!(sprites.readDataBoolean(sprite_hero, "on_fire"))) {
@@ -1894,52 +1954,11 @@ game.onUpdate(function () {
                 sprites.setDataBoolean(sprite_hero, "on_fire", false)
             })
         }
-    }
-})
-game.onUpdateInterval(5000, function () {
-    control.heapSnapshot()
-})
-game.onUpdateInterval(50, function () {
-    if (sprites.readDataBoolean(sprite_hero, "on_fire")) {
-        info.changeLifeBy(-1)
-    }
-})
-game.onUpdateInterval(2000, function () {
-    if (in_game) {
-        if (!(running) && info.score() < 20) {
-            info.changeScoreBy(1)
-        }
-        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
-            timer.after(1000, function () {
-                if (info.score() < 20) {
-                    info.changeScoreBy(1)
-                }
-            })
-        }
-    }
-})
-game.onUpdateInterval(2000, function () {
-    if (in_game && true) {
-        sprite_hero.say(clank)
-    }
-    if (in_game && !(paused)) {
-        if (character.matchesRule(sprite_hero, character.rule(Predicate.NotMoving))) {
-            clank_multiplier = 1
-        } else {
-            if (running) {
-                clank_multiplier = 2
-            } else {
-                clank_multiplier = 4
+        timer.throttle("burn_player", 50, function () {
+            if (sprites.readDataBoolean(sprite_hero, "on_fire")) {
+                info.changeLifeBy(-1)
             }
-        }
-        if (Math.percentChance(clank * clank_multiplier)) {
-            clank += 1
-        }
-    }
-})
-forever(function () {
-    if (false) {
-        music.playMelody(music.convertRTTTLToMelody("SunkenShip: d=8,o=3,b=120: 8c2, 4p, 4F#3, 8G3, 4p, 8c2, 4p, 4G3, 8F#3, 4p"), 40)
+        })
     }
 })
 forever(function () {
@@ -2103,30 +2122,6 @@ game.onUpdateInterval(500, function () {
         if (info.score() <= 0) {
             controller.moveSprite(sprite_hero, 50, 50)
             running = false
-        }
-    }
-})
-game.onUpdateInterval(200, function () {
-    if (in_game) {
-        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
-            sprite_seeing = sprites.createProjectileFromSprite(img`
-                3 
-                `, sprite, (sprite_hero.x - sprite.x) * 10, (sprite_hero.y - sprite.y) * 10)
-            sprite_seeing.setFlag(SpriteFlag.Invisible, true)
-            sprite_seeing.setFlag(SpriteFlag.DestroyOnWall, true)
-            sprite_seeing.setFlag(SpriteFlag.AutoDestroy, true)
-            sprites.setDataSprite(sprite_seeing, "saw_from", sprite)
-            sprite_seeing.setKind(SpriteKind.Seeing)
-        }
-    }
-})
-game.onUpdateInterval(10000, function () {
-    if (in_game) {
-        for (let sprite of sprites.allOfKind(SpriteKind.Enemy)) {
-            if (!(scene.spriteIsFollowingPath(sprite)) && !(sprites.readDataBoolean(sprite, "see_player"))) {
-                end_location = tiles.getTilesByType(sprites.dungeon.darkGroundCenter)[randint(0, tiles.getTilesByType(sprites.dungeon.darkGroundCenter).length - 1)]
-                scene.followPath(sprite, scene.aStar(tiles.locationOfSprite(sprite), end_location), 25)
-            }
         }
     }
 })
